@@ -13,4 +13,5 @@ public class ConsultationModel
     public Guid InspectionId { get; set; }
     public SpecialityModel Speciality { get; set; }
     public List<CommentModel>? Comments { get; set; }
+    //test
 }
