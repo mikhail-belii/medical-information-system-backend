@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="DbModels\" />
+      <ProjectReference Include="..\WebApi\WebApi.csproj" />
     </ItemGroup>
 
 </Project>
