@@ -17,7 +17,7 @@ public class EmailController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> SendEmail()
     {
-        await _emailSender.SendEmailAsync("Mister pozitiv4ikmishanya", "sasama15555@gmail.com", "test", "privetiki");
-        return Ok("200");
+        await _emailSender.SendEmailAsync("username", "email", "subject", "msg");
+        return Ok();
     }
 }
