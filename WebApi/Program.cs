@@ -14,20 +14,22 @@ using WebApi;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddJwtBearer(options =>
-//     {
-//         options.TokenValidationParameters = new TokenValidationParameters()
-//         {
-//             ValidateIssuer = true,
-//             ValidateAudience = true,
-//             ValidateLifetime = true,
-//             ValidateIssuerSigningKey = true,
-//             ValidIssuer = configuration["Jwt:Issuer"],
-//             ValidAudience = configuration["Jwt:Audience"],
-//             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]))
-//         };
-//     });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(x =>  
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidIssuer = configuration["Jwt:Issuer"],
+        ValidAudience = configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration["Jwt:Secret"]))
+    };
+});
 
 builder.Services.AddDbContext<AppDbContext>(
     options =>
@@ -40,27 +42,27 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SchemaFilter<EnumSchemaFilter>();
-
-    // var securityScheme = new OpenApiSecurityScheme()
-    // {
-    //     Name = "JWT Authentication",
-    //     Description = "Please enter token",
-    //     In = ParameterLocation.Header,
-    //     Type = SecuritySchemeType.Http,
-    //     Scheme = "bearer",
-    //     BearerFormat = "JWT",
-    //     Reference = new OpenApiReference()
-    //     {
-    //         Id = JwtBearerDefaults.AuthenticationScheme,
-    //         Type = ReferenceType.SecurityScheme
-    //     }
-    // };
-    //
-    // c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
-    // c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-    // {
-    //     { securityScheme, new List<string>() }
-    // });
+    
+    var securityScheme = new OpenApiSecurityScheme()
+    {
+        Name = "JWT Authentication",
+        Description = "Please enter token",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference()
+        {
+            Id = JwtBearerDefaults.AuthenticationScheme,
+            Type = ReferenceType.SecurityScheme
+        }
+    };
+    
+    c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        { securityScheme, new List<string>() }
+    });
 });
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -69,9 +71,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 var app = builder.Build();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
-app.MapControllers();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 app.Run();

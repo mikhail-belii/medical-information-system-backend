@@ -23,7 +23,7 @@ internal class DoctorService : IDoctorService
         _configuration = configuration;
     }
     
-    public async Task<TokenResponseModel> Register(DoctorRegisterModel doctorRegisterModel,
+    public async Task<(TokenResponseModel, Guid)> Register(DoctorRegisterModel doctorRegisterModel,
         CancellationToken cancellationToken = default)
     {
         DoctorEntity doctorEntity = new DoctorEntity()
@@ -45,10 +45,10 @@ internal class DoctorService : IDoctorService
 
         var token = CreateToken(doctorEntity);
 
-        return token;
+        return (token, doctorEntity.Id);
     }
 
-    public async Task<TokenResponseModel> Login(LoginCredentialsModel loginCredentialsModel, CancellationToken cancellationToken = default)
+    public async Task<(TokenResponseModel, Guid)> Login(LoginCredentialsModel loginCredentialsModel, CancellationToken cancellationToken = default)
     {
         var doctor = await _doctorRepository
             .GetByCredentials(loginCredentialsModel.Email, loginCredentialsModel.Password);
@@ -56,21 +56,29 @@ internal class DoctorService : IDoctorService
         if (doctor != null)
         {
             var token = CreateToken(doctor);
-            return token;
+            return (token, doctor.Id);
         }
-        else
+        return (new TokenResponseModel
         {
-            return new TokenResponseModel
-            {
-                Token = ""
-            };
-        }
+            Token = ""
+        }, Guid.Empty);
     }
 
-    public async Task<bool> IsEmailUnique(DoctorRegisterModel doctorRegisterModel,
+    public async Task<bool> IsEmailUnique(string email,
         CancellationToken cancellationToken = default)
     {
-        return await _doctorRepository.IsEmailUnique(doctorRegisterModel.Email);
+        return await _doctorRepository.IsEmailUnique(email);
+    }
+
+    public async Task<bool> IsSpecialityExisting(DoctorRegisterModel doctorRegisterModel,
+        CancellationToken cancellationToken = default)
+    {
+        return await _doctorRepository.IsSpecialityExisting(doctorRegisterModel.Speciality);
+    }
+
+    public async Task<DoctorEntity?> GetDoctorById(Guid id)
+    {
+        return await _doctorRepository.GetDoctorById(id);
     }
 
     public TokenResponseModel CreateToken(DoctorEntity doctorEntity)
@@ -85,7 +93,9 @@ internal class DoctorService : IDoctorService
             ]),
             Expires = DateTime.UtcNow.AddMinutes(60),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
+                SecurityAlgorithms.HmacSha256Signature),
+            Issuer = _configuration["Jwt:Issuer"],
+            Audience = _configuration["Jwt:Audience"]
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -95,5 +105,28 @@ internal class DoctorService : IDoctorService
         };
 
         return tokenResponseModel;
+    }
+
+    public async Task<DoctorModel> GetProfile(Guid userId)
+    {
+        var doctorEntity = await _doctorRepository.GetProfile(userId);
+        
+        var doctorModel = new DoctorModel
+        {
+            Id = doctorEntity.Id,
+            CreateTime = doctorEntity.CreateTime,
+            Name = doctorEntity.Name,
+            Birthday = doctorEntity.Birthday,
+            Gender = doctorEntity.Gender,
+            Email = doctorEntity.Email,
+            Phone = doctorEntity.Phone,
+            Speciality = doctorEntity.Speciality
+        };
+        return doctorModel;
+    }
+
+    public async Task EditProfile(Guid id, DoctorEditModel doctorEditModel)
+    {
+        await _doctorRepository.EditProfile(id, doctorEditModel);
     }
 }
