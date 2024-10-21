@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessLogic;
@@ -41,6 +42,7 @@ builder.Services.AddBusinessLogic();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddSwaggerGen(c =>
 {
+    
     c.SchemaFilter<EnumSchemaFilter>();
     
     var securityScheme = new OpenApiSecurityScheme()
@@ -63,6 +65,9 @@ builder.Services.AddSwaggerGen(c =>
     {
         { securityScheme, new List<string>() }
     });
+    
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

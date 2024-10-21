@@ -152,3 +152,5 @@ C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Microsoft.
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\WebApi.xml
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\obj\Debug\net8.0\WebApi.xml

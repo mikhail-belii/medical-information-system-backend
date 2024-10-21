@@ -9,5 +9,5 @@ public class DiagnosisEntity
     public string Name { get; set; }
     public string? Description { get; set; }
     public DiagnosisType Type { get; set; }
-    public Icd10Entity Icd10 { get; set; }
+    public Guid Icd10Id { get; set; }
 }

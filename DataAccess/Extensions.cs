@@ -9,6 +9,7 @@ public static class Extensions
     public static IServiceCollection AddDataBase(this IServiceCollection serviceCollection)
     {
         serviceCollection.AddScoped<IDoctorRepository, DoctorRepository>();
+        serviceCollection.AddScoped<IPatientRepository, PatientRepository>();
         return serviceCollection;
     }
 }
