@@ -1,5 +1,6 @@
 ﻿using Common.DtoModels.Inspection;
 using Common.DtoModels.Patient;
+using Common.Enums;
 
 namespace BusinessLogic.ServiceInterfaces;
 
@@ -11,4 +12,14 @@ public interface IPatientService
         InspectionCreateModel inspectionCreateModel,
         Guid doctorId, 
         Guid patientId);
+
+    public Task<PatientPagedListModel> GetPatientsList(
+        string name,
+        List<Conclusion>? conclusions,
+        PatientSorting? sorting,
+        bool scheduledVisits,
+        bool onlyMine,
+        int page,
+        int size,
+        Guid doctorId);
 }

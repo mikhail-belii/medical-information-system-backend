@@ -10,4 +10,5 @@ public class PatientEntity
     public string Name { get; set; }
     public DateTime? Birthday { get; set; }
     public Gender Gender { get; set; }
+    public List<InspectionEntity> Inspections { get; set; }
 }

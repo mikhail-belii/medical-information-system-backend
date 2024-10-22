@@ -1,6 +1,8 @@
 ﻿using Common.DbModels;
 using Common.DtoModels.Inspection;
+using Common.DtoModels.Others;
 using Common.DtoModels.Patient;
+using Common.Enums;
 using DataAccess.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -143,4 +145,129 @@ public class PatientRepository : IPatientRepository
 
         return await FindBaseInspectionId(inspection.BaseInspectionId);
     }
+
+    public async Task<PatientPagedListModel> GetPatientsList(
+        string name,
+        List<Conclusion>? conclusions,
+        PatientSorting? sorting,
+        bool scheduledVisits, 
+        bool onlyMine,
+        int page,
+        int size, 
+        Guid doctorId)
+    {
+        var query = _dbContext.Patients.AsQueryable();
+        
+        query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+        
+        if (onlyMine)
+        {
+            query = query.Where(p => p.DoctorId == doctorId);
+        }
+
+        if (scheduledVisits)
+        {
+            query = query.Where(p =>
+                _dbContext.Inspections
+                    .Where(i => i.Patient.Id == p.Id)
+                    .Any(i => i.NextVisitDate > DateTime.UtcNow));
+        }
+
+        if (conclusions != null && conclusions.Any())
+        {
+            var inspectionQuery = _dbContext.Inspections
+                .Where(i => conclusions.Contains((Conclusion)i.Conclusion))
+                .Select(i => i.Patient.Id)
+                .Distinct();
+
+            query = query.Where(p => inspectionQuery.Contains(p.Id));
+        }
+
+        if (sorting != null)
+        {
+            switch (sorting)
+            {
+                case PatientSorting.CreateAsc:
+                    query = query.OrderBy(p => p.CreateTime);
+                    break;
+                case PatientSorting.CreateDesc:
+                    query = query.OrderByDescending(p => p.CreateTime);
+                    break;
+                case PatientSorting.NameAsc:
+                    query = query.OrderBy(p => p.Name);
+                    break;
+                case PatientSorting.NameDesc:
+                    query = query.OrderByDescending(p => p.Name);
+                    break;
+                case PatientSorting.InspectionAsc:
+                    query = query.OrderBy(p => p.Inspections.Max(i => i.Date));
+                    break;
+                case PatientSorting.InspectionDesc:
+                    query = query.OrderByDescending(p => p.Inspections.Max(i => i.Date));
+                    break;
+            }
+        }
+
+        var pagination = new PageInfoModel
+        {
+            Size = size,
+            Current = page,
+            Count = (int)Math.Ceiling((double) await query.CountAsync() / size)
+        };
+
+        var patients = await query
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+
+        var patientModels = new List<PatientModel>();
+        foreach (var patient in patients)
+        {
+            var patientModel = new PatientModel
+            {
+                Id = patient.Id,
+                Birthday = patient.Birthday,
+                CreateTime = patient.CreateTime,
+                Gender = patient.Gender,
+                Name = patient.Name
+            };
+            patientModels.Add(patientModel);
+        }
+        
+        var model = new PatientPagedListModel
+        {
+            Pagination = pagination,
+            Patients = patientModels
+        };
+
+        return model;
+    }
+
+    // public async Task WriteRootCodes()
+    // {
+    //     var icd10Entities = await _dbContext.Icd10s.ToListAsync();
+    //
+    //     foreach (var entity in icd10Entities)
+    //     {
+    //         entity.IcdRootCode = FindRootCode(entity, icd10Entities);
+    //     }
+    //
+    //     await _dbContext.SaveChangesAsync();
+    // }
+    //
+    // public string FindRootCode(Icd10Entity entity, List<Icd10Entity> allEntities)
+    // {
+    //     if (entity.IcdParentId == null)
+    //     {
+    //         return entity.Code;
+    //     }
+    //
+    //     var parentEntity = allEntities.FirstOrDefault(e => e.IcdId == entity.IcdParentId);
+    //     if (parentEntity == null)
+    //     {
+    //         return entity.Code;
+    //     }
+    //
+    //     return FindRootCode(parentEntity, allEntities);
+    // }
 }

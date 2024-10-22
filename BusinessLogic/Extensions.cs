@@ -10,6 +10,7 @@ public static class Extensions
     {
         serviceCollection.AddScoped<IDoctorService, DoctorService>();
         serviceCollection.AddScoped<IPatientService, PatientService>();
+        serviceCollection.AddScoped<IDictionaryService, DictionaryService>();
         serviceCollection.AddSingleton<ITokenService, TokenService>();
         return serviceCollection;
     }

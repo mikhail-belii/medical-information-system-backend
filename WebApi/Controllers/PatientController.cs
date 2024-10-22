@@ -5,6 +5,7 @@ using Common.DtoModels.Inspection;
 using Common.DtoModels.Others;
 using Common.DtoModels.Patient;
 using Common.Enums;
+using DataAccess.RepositoryInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -117,7 +118,7 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<PatientPagedListModel>> GetPatientsList(
         [FromQuery] string? name,
-        [FromQuery] Conclusion? conclusions,
+        [FromQuery] List<Conclusion>? conclusions,
         [FromQuery] PatientSorting? sorting,
         [FromQuery, DefaultValue(false)] bool? scheduledVisits,
         [FromQuery, DefaultValue(false)] bool? onlyMine,
@@ -125,7 +126,32 @@ public class PatientController : ControllerBase
         [FromQuery, DefaultValue(5)] int size
         )
     {
-        return Ok();
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        var userId = await _tokenService.GetUserIdByToken(token);
+        if (userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        if (size <= 0 || page <= 0)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = "Page and size values must be greater than 0"
+            });
+        }
+
+        var list = await _patientService.GetPatientsList(
+            (string.IsNullOrEmpty(name)) ? "" : name,
+            conclusions,
+            sorting,
+            scheduledVisits == true,
+            onlyMine == true,
+            page,
+            size,
+            userId);
+        return Ok(list);
     }
 
 
@@ -156,4 +182,5 @@ public class PatientController : ControllerBase
         var inspectionId = await _patientService.CreateInspection(model, userId, id);
         return Ok(inspectionId);
     }
+    
 }
