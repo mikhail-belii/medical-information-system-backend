@@ -43,4 +43,19 @@ public class PatientService : IPatientService
         return await _patientRepository.GetPatientsList(
             name, conclusions, sorting, scheduledVisits, onlyMine, page, size, doctorId);
     }
+
+    public async Task<InspectionPagedListModel> GetInspectionsList(
+        Guid id, 
+        bool grouped,
+        List<Guid> icdRoots,
+        int page,
+        int size)
+    {
+        return await _patientRepository.GetInspectionsList(id, grouped, icdRoots, page, size);
+    }
+
+    public async Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request)
+    {
+        return await _patientRepository.GetInspectionsWithoutChildren(id, request);
+    }
 }

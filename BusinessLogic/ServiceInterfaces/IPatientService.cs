@@ -22,4 +22,13 @@ public interface IPatientService
         int page,
         int size,
         Guid doctorId);
+
+    public Task<InspectionPagedListModel> GetInspectionsList(
+        Guid id,
+        bool grouped,
+        List<Guid> icdRoots,
+        int page,
+        int size);
+
+    public Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request);
 }

@@ -11,6 +11,7 @@ public static class Extensions
         serviceCollection.AddScoped<IDoctorRepository, DoctorRepository>();
         serviceCollection.AddScoped<IPatientRepository, PatientRepository>();
         serviceCollection.AddScoped<IDictionaryRepository, DictionaryRepository>();
+        serviceCollection.AddScoped<IInspectionRepository, InspectionRepository>();
         return serviceCollection;
     }
 }

@@ -25,6 +25,15 @@ public interface IPatientRepository
         int size,
         Guid doctorId);
 
+    Task<InspectionPagedListModel> GetInspectionsList(
+        Guid id,
+        bool grouped,
+        List<Guid> icdRoots,
+        int page,
+        int size);
+    
+    Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request);
+
     // Task WriteRootCodes();
     // public string FindRootCode(Icd10Entity entity, List<Icd10Entity> allEntities);
 }

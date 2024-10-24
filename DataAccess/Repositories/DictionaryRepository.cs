@@ -1,4 +1,6 @@
-﻿using Common.DtoModels.Icd10;
+﻿using System.Text.RegularExpressions;
+using Common;
+using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
 using Common.DtoModels.Speciality;
 using DataAccess.RepositoryInterfaces;
@@ -78,20 +80,25 @@ public class DictionaryRepository : IDictionaryRepository
 
     public async Task<Icd10SearchModel> SearchForDiagnoses(string request, int page, int size)
     {
-        var table1 = _dbContext.Icd10s
-            .Where(i => i.Code.Contains(request));
-        var table2 = _dbContext.Icd10s
-            .Where(i => i.Name.Contains(request));
-        var unitedTable = table1.Union(table2);
+        var query = _dbContext.Icd10s.AsQueryable();
+        
+        if (Regex.IsMatch(request, RegexPatterns.IcdCode))
+        {
+            query = query.Where(i => i.Code.Contains(request));
+        }
+        else
+        {
+            query = query.Where(i => i.Name.Contains(request));
+        }
 
         var pagination = new PageInfoModel
         {
             Size = size,
             Current = page,
-            Count = (int)Math.Ceiling((double) await unitedTable.CountAsync() / size)
+            Count = (int)Math.Ceiling((double) await query.CountAsync() / size)
         };
         
-        var icd10s = await unitedTable
+        var icd10s = await query
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();

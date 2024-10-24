@@ -1,10 +1,14 @@
-﻿using Common.DbModels;
+﻿using System.Text.RegularExpressions;
+using Common;
+using Common.DbModels;
+using Common.DtoModels.Diagnosis;
 using Common.DtoModels.Inspection;
 using Common.DtoModels.Others;
 using Common.DtoModels.Patient;
 using Common.Enums;
 using DataAccess.RepositoryInterfaces;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Security;
 
 namespace DataAccess.Repositories;
 
@@ -40,7 +44,7 @@ public class PatientRepository : IPatientRepository
             .FirstOrDefaultAsync(p => p.Id == id);
         if (patient is null)
         {
-            return null;
+            throw new InvalidParameterException();
         }
 
         var patientModel = new PatientModel
@@ -60,7 +64,79 @@ public class PatientRepository : IPatientRepository
         Guid doctorId,
         Guid patientId)
     {
+        if (await _dbContext.Patients.FindAsync(patientId) == null)
+        {
+            throw new KeyNotFoundException();
+        }
+        
         var baseInspectionId = await FindBaseInspectionId(inspectionCreateModel.PreviousInspectionId);
+
+        if (inspectionCreateModel.NextVisitDate != null && inspectionCreateModel.DeathDate != null)
+        {
+            throw new IncorrectModelException("Next Visit Date and Death Date can not be not null at the same time");
+        }
+
+        if (inspectionCreateModel.Date > DateTime.UtcNow)
+        {
+            throw new IncorrectModelException("Date can not be in the future");
+        }
+
+        if (inspectionCreateModel.NextVisitDate != null &&
+            inspectionCreateModel.NextVisitDate < DateTime.UtcNow.AddMinutes(1))
+        {
+            throw new IncorrectModelException("Next visit date and time must be later than now");
+        }
+        
+        if (inspectionCreateModel.DeathDate != null &&
+            inspectionCreateModel.DeathDate > DateTime.UtcNow.AddMinutes(1))
+        {
+            throw new IncorrectModelException("Death date and time cannot be later than now");
+        }
+
+        if (inspectionCreateModel.PreviousInspectionId != null)
+        {
+            var prev = await _dbContext.Inspections.FindAsync(inspectionCreateModel.PreviousInspectionId);
+            if (inspectionCreateModel.Date < prev?.Date)
+            {
+                throw new IncorrectModelException("Date can not be earlier than previous inspection");
+            }
+        }
+
+        if (inspectionCreateModel.Diagnoses
+                .Where(d => d.Type == DiagnosisType.Main)
+                .ToList().Count > 1)
+        {
+            throw new IncorrectModelException("There are more than one diagnosis with type 'Main'");
+        }
+
+        if (inspectionCreateModel.Conclusion == Conclusion.Disease && inspectionCreateModel.NextVisitDate == null)
+        {
+            throw new IncorrectModelException("There is no expected Next Visit Date");
+        }
+        
+        if (inspectionCreateModel.Conclusion == Conclusion.Death && inspectionCreateModel.DeathDate == null)
+        {
+            throw new IncorrectModelException("There is no expected Death Date");
+        }
+
+        if (_dbContext.Patients
+                .Include(patientEntity => patientEntity.Inspections)
+                .FirstOrDefault(p => p.Id == patientId)
+                .Inspections.Any(i => i.Conclusion == Conclusion.Death))
+        {
+            throw new IncorrectModelException("This patient is already dead");
+        }
+
+        if (inspectionCreateModel.Consultations != null)
+        {
+            var specialityIds = inspectionCreateModel.Consultations
+                .Select(c => c.SpecialityId)
+                .ToList();
+            if (specialityIds.Distinct().Count() != specialityIds.Count)
+            {
+                throw new IncorrectModelException("Inspection cannot have several consultations with the same specialty of a doctor");
+            }
+        }
         
         var inspectionEntity = new InspectionEntity
         {
@@ -241,6 +317,190 @@ public class PatientRepository : IPatientRepository
         };
 
         return model;
+    }
+
+    public async Task<InspectionPagedListModel> GetInspectionsList(
+        Guid id,
+        bool grouped,
+        List<Guid> icdRoots,
+        int page, 
+        int size)
+    {
+        if (await _dbContext.Patients.FindAsync(id) == null)
+        {
+            throw new KeyNotFoundException();
+        }
+        
+        var query = _dbContext.Inspections
+            .Include(i => i.Patient)
+            .Include(i => i.Doctor)
+            .Include(i => i.Diagnoses)
+            .AsQueryable();
+
+        query = query.Where(i => i.Patient.Id == id);
+        if (icdRoots.Count != 0)
+        {
+            var childrens = new List<Guid>();
+            foreach (var rootId in icdRoots)
+            {
+                var rootCode = await _dbContext.Icd10s
+                    .Where(i => i.Id == rootId)
+                    .Select(i => i.Code)
+                    .FirstOrDefaultAsync();
+
+                if (rootCode != null)
+                {
+                    var icdChildrens = await _dbContext.Icd10s
+                        .Where(i => i.IcdRootCode == rootCode)
+                        .Select(i => i.Id)
+                        .ToListAsync();
+
+                    childrens.AddRange(icdChildrens);
+                }
+            }
+
+            query = query
+                .Where(i => i.Diagnoses
+                    .Any(d => childrens.Contains(d.Icd10Id)));
+        }
+
+        if (grouped)
+        {
+            query = query
+                .Where(i => i.PreviousInspectionId == null);
+        }
+
+        var inspections = await query.ToListAsync();
+
+        var previewModels = new List<InspectionPreviewModel>();
+        foreach (var inspection in inspections)
+        {
+            var model = new InspectionPreviewModel
+            {
+                Id = inspection.Id,
+                Conclusion = inspection.Conclusion,
+                CreateTime = DateTime.UtcNow,
+                Date = inspection.CreateTime,
+                Doctor = inspection.Doctor.Name,
+                DoctorId = inspection.Doctor.Id,
+                Patient = inspection.Patient.Name,
+                PatientId = inspection.Patient.Id,
+                PreviousId = inspection.PreviousInspectionId
+            };
+            var diagnosisEntity = inspection.Diagnoses
+                .FirstOrDefault(d => d.Type == DiagnosisType.Main);
+            var icd10 = await _dbContext.Icd10s
+                .FirstOrDefaultAsync(i => i.Id == diagnosisEntity.Icd10Id);
+            var diagnosisModel = new DiagnosisModel
+            {
+                Code = icd10.Code,
+                CreateTime = diagnosisEntity.CreateTime,
+                Description = diagnosisEntity.Description,
+                Id = diagnosisEntity.Id,
+                Name = diagnosisEntity.Name,
+                Type = diagnosisEntity.Type
+            };
+            model.Diagnosis = diagnosisModel;
+            var hasNested = ((await _dbContext.Inspections
+                .FirstOrDefaultAsync(i => i.PreviousInspectionId == model.Id)) != null &&
+                             model.PreviousId == null);
+            var hasChain = (await _dbContext.Inspections
+                .AnyAsync(i => i.PreviousInspectionId == model.Id));
+            model.HasNested = hasNested;
+            model.HasChain = hasChain;
+            previewModels.Add(model);
+        }
+        
+        var pagination = new PageInfoModel
+        {
+            Size = size,
+            Current = page,
+            Count = (int)Math.Ceiling((double) previewModels.Count / size)
+        };
+
+        var inspections2 = previewModels
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToList();
+        
+        
+        var finalModel = new InspectionPagedListModel
+        {
+            Pagination = pagination,
+            Inspections = inspections2
+        };
+
+        return finalModel;
+    }
+
+    public async Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request)
+    {
+        var query = _dbContext.Inspections
+            .Include(i => i.Patient)
+            .Include(i => i.Doctor)
+            .Include(i => i.Diagnoses)
+            .AsQueryable();
+
+        if (await _dbContext.Patients.FindAsync(id) == null)
+        {
+            throw new KeyNotFoundException();
+        }
+        
+        query = query.Where(i => i.Patient.Id == id);
+
+        if (!string.IsNullOrEmpty(request))
+        {
+            if (Regex.IsMatch(request, RegexPatterns.IcdCode))
+            {
+                var diagnosisIds = _dbContext.Icd10s
+                    .Where(i => i.Code.Contains(request))
+                    .Select(i => i.Id)
+                    .ToList();
+
+                query = query.Where(i => i.Diagnoses
+                    .Any(d => diagnosisIds.Contains(d.Icd10Id)));
+            }
+            else
+            {
+                query = query.Where(i => i.Diagnoses
+                    .Any(d => d.Name.ToLower().Contains(request.ToLower())));
+            }
+        }
+
+
+
+        await query.ToListAsync();
+        var list = query
+            .Where(inspection => !query.Any(i => i.PreviousInspectionId == inspection.Id))
+            .ToList();
+
+        var newList = new List<InspectionShortModel>();
+        foreach (var inspection in list)
+        {
+            var shortModel = new InspectionShortModel
+            {
+                CreateTime = inspection.CreateTime,
+                Date = inspection.Date.HasValue ? inspection.Date.Value : DateTime.UtcNow,
+                Id = inspection.Id
+            };
+            var diagnosisEntity = inspection.Diagnoses.FirstOrDefault(d => d.Type == DiagnosisType.Main);
+            var diagnosisModel = new DiagnosisModel
+            {
+                Code = _dbContext.Icd10s
+                    .Where(i => i.Id == diagnosisEntity.Icd10Id)
+                    .Select(i => i.Code)
+                    .FirstOrDefault(),
+                CreateTime = diagnosisEntity.CreateTime,
+                Description = diagnosisEntity.Description,
+                Id = diagnosisEntity.Id,
+                Name = diagnosisEntity.Name,
+                Type = diagnosisEntity.Type
+            };
+            shortModel.Diagnosis = diagnosisModel;
+            newList.Add(shortModel);
+        }
+
+        return newList;
     }
 
     // public async Task WriteRootCodes()

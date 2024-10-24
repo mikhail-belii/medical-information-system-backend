@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using BusinessLogic.ServiceInterfaces;
+using Common;
 using Common.DtoModels.Inspection;
 using Common.DtoModels.Others;
 using Common.DtoModels.Patient;
 using Common.Enums;
-using DataAccess.RepositoryInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Org.BouncyCastle.Security;
 
 namespace WebApi.Controllers;
 
@@ -93,14 +92,19 @@ public class PatientController : ControllerBase
         {
             return Unauthorized();
         }
-        
-        var patient = await _patientService.GetPatientById(id);
-        if (patient is null)
-        {
-            return NotFound();
-        }
 
-        return Ok(patient);
+        try
+        {
+            return Ok(await _patientService.GetPatientById(id));
+        }
+        catch (InvalidParameterException)
+        {
+            return NotFound(new ResponseModel
+            {
+                Message = "Error",
+                Status = $"Patient with id '{id}' not found"
+            });
+        }
     }
 
     /// <summary>
@@ -179,8 +183,128 @@ public class PatientController : ControllerBase
             return Unauthorized();
         }
 
-        var inspectionId = await _patientService.CreateInspection(model, userId, id);
-        return Ok(inspectionId);
+        try
+        {
+            var inspectionId = await _patientService.CreateInspection(model, userId, id);
+            return Ok(inspectionId);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new ResponseModel
+            {
+                Message = "Error",
+                Status = $"Patient with id '{id}' not found"
+            });
+        }
+        catch (IncorrectModelException ex)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = ex.Message
+            });
+        }
+        
     }
     
+    /// <summary>
+    /// Get a list of patient medical inspections
+    /// </summary>
+    /// <response code="200">Patient's inspections list retrieved</response>
+    /// <response code="400">Invalid arguments for filtration/pagination</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Patient not found</response>
+    /// <response code="500">InternalServerError</response>
+    [Authorize]
+    [HttpGet("{id:guid}/inspections")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(InspectionPagedListModel))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
+    public async Task<ActionResult<InspectionPagedListModel>> GetInspectionsList(
+        [FromRoute] Guid id,
+        [FromQuery, DefaultValue(false)] bool? grouped,
+        [FromQuery] List<Guid>? icdRoots,
+        [FromQuery, DefaultValue(1)] int page,
+        [FromQuery, DefaultValue(5)] int size
+    )
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        var userId = await _tokenService.GetUserIdByToken(token);
+        if (userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        if (size <= 0 || page <= 0)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = "Page and size values must be greater than 0"
+            });
+        }
+
+        try
+        {
+            var list = await _patientService.GetInspectionsList(
+                id,
+                grouped == true,
+                icdRoots.Count == 0 ? new List<Guid>() : icdRoots,
+                page,
+                size);
+            return Ok(list);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new ResponseModel
+            {
+                Message = "Error",
+                Status = $"Patient with id '{id}' not found"
+            });
+        }
+
+    }
+    
+    /// <summary>
+    /// Search for patient medical inspections without child inspections
+    /// </summary>
+    /// <response code="200">Patient's inspections list retrieved</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Patient not found</response>
+    /// <response code="500">InternalServerError</response>
+    [Authorize]
+    [HttpGet("{id:guid}/inspections/search")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<InspectionShortModel>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
+    public async Task<ActionResult<List<InspectionShortModel>>> GetInspectionsWithoutChildren(
+        [FromRoute] Guid id,
+        [FromQuery] string? request)
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        var userId = await _tokenService.GetUserIdByToken(token);
+        if (userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            return Ok(await _patientService.GetInspectionsWithoutChildren(
+                id,
+                string.IsNullOrEmpty(request) ? "" : request));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new ResponseModel
+            {
+                Message = "Error",
+                Status = $"Patient with id '{id}' not found"
+            });
+        }
+    }
 }
