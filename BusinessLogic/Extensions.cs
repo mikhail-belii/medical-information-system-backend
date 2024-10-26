@@ -12,6 +12,9 @@ public static class Extensions
         serviceCollection.AddScoped<IPatientService, PatientService>();
         serviceCollection.AddScoped<IDictionaryService, DictionaryService>();
         serviceCollection.AddScoped<IInspectionService, InspectionService>();
+        serviceCollection.AddScoped<IConsultationService, ConsultationService>();
+        serviceCollection.AddScoped<IReportService, ReportService>();
+        serviceCollection.AddScoped<IReportService, ReportService>();
         serviceCollection.AddSingleton<ITokenService, TokenService>();
         return serviceCollection;
     }

@@ -4,6 +4,7 @@ using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
 using Common.DtoModels.Patient;
 using Common.DtoModels.Speciality;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
@@ -22,6 +23,9 @@ public class DictionaryController : ControllerBase
     /// <summary>
     /// Get specialities list
     /// </summary>
+    /// <param name="name">part of the name for filtering</param>
+    /// <param name="page">page number</param>
+    /// <param name="size">required number of elements per page</param>
     /// <response code="200">Specialties paged list retrieved</response>
     /// <response code="400">Invalid arguments for filtration/pagination</response>
     /// <response code="500">InternalServerError</response>
@@ -30,9 +34,9 @@ public class DictionaryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<SpecialtiesPagedListModel>> GetSpecialities(
-        [FromQuery] string? name,
-        [FromQuery, DefaultValue(1)] int page,
-        [FromQuery, DefaultValue(5)] int size
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "page"), DefaultValue(1)] int page,
+        [FromQuery(Name = "size"), DefaultValue(5)] int size
         )
     {
         if (size <= 0 || page <= 0)
@@ -54,6 +58,9 @@ public class DictionaryController : ControllerBase
     /// <summary>
     /// Search for diagnoses in ICD-10 dictionary
     /// </summary>
+    /// <param name="request">part of the diagnosis name or code</param>
+    /// <param name="page">page number</param>
+    /// <param name="size">required number of elements per page</param>
     /// <response code="200">Searching result extracted</response>
     /// <response code="400">Some fields in request are invalid</response>
     /// <response code="500">InternalServerError</response>
@@ -62,9 +69,9 @@ public class DictionaryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<Icd10SearchModel>> SearchForDiagnoses(
-        [FromQuery] string? request,
-        [FromQuery, DefaultValue(1)] int page,
-        [FromQuery, DefaultValue(5)] int size
+        [FromQuery(Name = "request")] string? request,
+        [FromQuery(Name = "page"), DefaultValue(1)] int page,
+        [FromQuery(Name = "size"), DefaultValue(5)] int size
     )
     {
         if (size <= 0 || page <= 0)

@@ -84,7 +84,7 @@ public class PatientRepository : IPatientRepository
         if (inspectionCreateModel.NextVisitDate != null &&
             inspectionCreateModel.NextVisitDate < DateTime.UtcNow.AddMinutes(1))
         {
-            throw new IncorrectModelException("Next visit date and time must be later than now");
+                throw new IncorrectModelException("Next visit date and time must be later than now");
         }
         
         if (inspectionCreateModel.DeathDate != null &&
@@ -401,11 +401,9 @@ public class PatientRepository : IPatientRepository
                 Type = diagnosisEntity.Type
             };
             model.Diagnosis = diagnosisModel;
-            var hasNested = ((await _dbContext.Inspections
-                .FirstOrDefaultAsync(i => i.PreviousInspectionId == model.Id)) != null &&
-                             model.PreviousId == null);
-            var hasChain = (await _dbContext.Inspections
-                .AnyAsync(i => i.PreviousInspectionId == model.Id));
+            var hasNested = await _dbContext.Inspections
+                .AnyAsync(i => i.PreviousInspectionId == model.Id);
+            var hasChain = model.PreviousId == null && hasNested;
             model.HasNested = hasNested;
             model.HasChain = hasChain;
             previewModels.Add(model);

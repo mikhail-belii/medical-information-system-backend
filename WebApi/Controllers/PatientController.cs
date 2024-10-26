@@ -72,44 +72,15 @@ public class PatientController : ControllerBase
     }
 
     /// <summary>
-    /// Get patient card
-    /// </summary>
-    /// <response code="200">Success</response>
-    /// <response code="401">Unauthorized</response>
-    /// <response code="404">Not Found</response>
-    /// <response code="500">InternalServerError</response>
-    [Authorize]
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PatientModel))]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
-    [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
-    public async Task<ActionResult<PatientModel>> GetPatient([FromRoute] Guid id)
-    {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
-        try
-        {
-            return Ok(await _patientService.GetPatientById(id));
-        }
-        catch (InvalidParameterException)
-        {
-            return NotFound(new ResponseModel
-            {
-                Message = "Error",
-                Status = $"Patient with id '{id}' not found"
-            });
-        }
-    }
-
-    /// <summary>
     /// Get patients list
     /// </summary>
+    /// <param name="name">part of the name for filtering</param>
+    /// <param name="conclusions">conclusion list to filter by conclusions</param>
+    /// <param name="sorting">option to sort patients</param>
+    /// <param name="scheduledVisits">show only scheduled visits</param>
+    /// <param name="onlyMine">show inspections done by this doctor</param>
+    /// <param name="page">page number</param>
+    /// <param name="size">required number of elements per page</param>
     /// <response code="200">Patients paged list retrieved</response>
     /// <response code="400">Invalid arguments for filtration/pagination/sorting</response>
     /// <response code="401">Unauthorized</response>
@@ -121,13 +92,13 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<PatientPagedListModel>> GetPatientsList(
-        [FromQuery] string? name,
-        [FromQuery] List<Conclusion>? conclusions,
-        [FromQuery] PatientSorting? sorting,
-        [FromQuery, DefaultValue(false)] bool? scheduledVisits,
-        [FromQuery, DefaultValue(false)] bool? onlyMine,
-        [FromQuery, DefaultValue(1)] int page,
-        [FromQuery, DefaultValue(5)] int size
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "conclusions")] List<Conclusion>? conclusions,
+        [FromQuery(Name = "sorting")] PatientSorting? sorting,
+        [FromQuery(Name = "scheduledVisits"), DefaultValue(false)] bool? scheduledVisits,
+        [FromQuery(Name = "onlyMine"), DefaultValue(false)] bool? onlyMine,
+        [FromQuery(Name = "page"), DefaultValue(1)] int page,
+        [FromQuery(Name = "size"), DefaultValue(5)] int size
         )
     {
         var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
@@ -157,11 +128,11 @@ public class PatientController : ControllerBase
             userId);
         return Ok(list);
     }
-
-
+    
     /// <summary>
     /// Create inspection for specified patient
     /// </summary>
+    /// <param name="id">Patient's identifier</param>
     /// <response code="200">Success</response>
     /// <response code="400">Bad request</response>
     /// <response code="401">Unauthorized</response>
@@ -173,7 +144,7 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<Guid>> CreateInspection(
-        [FromRoute] Guid id,
+        [FromRoute(Name = "id")] Guid id,
         [FromBody] InspectionCreateModel model)
     {
         var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
@@ -210,6 +181,11 @@ public class PatientController : ControllerBase
     /// <summary>
     /// Get a list of patient medical inspections
     /// </summary>
+    /// <param name="id">Patient's identifier</param>
+    /// <param name="grouped">flag - whether grouping by inspection chain is required - for filtration</param>
+    /// <param name="icdRoots">root elements for ICD-10 - for filtration</param>
+    /// <param name="page">page number</param>
+    /// <param name="size">required number of elements per page</param>
     /// <response code="200">Patient's inspections list retrieved</response>
     /// <response code="400">Invalid arguments for filtration/pagination</response>
     /// <response code="401">Unauthorized</response>
@@ -223,12 +199,11 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<InspectionPagedListModel>> GetInspectionsList(
-        [FromRoute] Guid id,
-        [FromQuery, DefaultValue(false)] bool? grouped,
-        [FromQuery] List<Guid>? icdRoots,
-        [FromQuery, DefaultValue(1)] int page,
-        [FromQuery, DefaultValue(5)] int size
-    )
+        [FromRoute(Name = "id")] Guid id,
+        [FromQuery(Name = "grouped"), DefaultValue(false)] bool? grouped,
+        [FromQuery(Name = "icdRoots")] List<Guid>? icdRoots,
+        [FromQuery(Name = "page"), DefaultValue(1)] int page,
+        [FromQuery(Name = "size"), DefaultValue(5)] int size)
     {
         var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
         var userId = await _tokenService.GetUserIdByToken(token);
@@ -268,8 +243,47 @@ public class PatientController : ControllerBase
     }
     
     /// <summary>
+    /// Get patient card
+    /// </summary>
+    /// <param name="id">Patient's identifier</param>
+    /// <response code="200">Success</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Not Found</response>
+    /// <response code="500">InternalServerError</response>
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PatientModel))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
+    public async Task<ActionResult<PatientModel>> GetPatient([FromRoute(Name = "id")] Guid id)
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        var userId = await _tokenService.GetUserIdByToken(token);
+        if (userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            return Ok(await _patientService.GetPatientById(id));
+        }
+        catch (InvalidParameterException)
+        {
+            return NotFound(new ResponseModel
+            {
+                Message = "Error",
+                Status = $"Patient with id '{id}' not found"
+            });
+        }
+    }
+    
+    /// <summary>
     /// Search for patient medical inspections without child inspections
     /// </summary>
+    /// <param name="id">Patient's identifier</param>
+    /// <param name="request">part of the diagnosis name or code</param>
     /// <response code="200">Patient's inspections list retrieved</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Patient not found</response>
@@ -282,8 +296,8 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<List<InspectionShortModel>>> GetInspectionsWithoutChildren(
-        [FromRoute] Guid id,
-        [FromQuery] string? request)
+        [FromRoute(Name = "id")] Guid id,
+        [FromQuery(Name = "request")] string? request)
     {
         var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
         var userId = await _tokenService.GetUserIdByToken(token);

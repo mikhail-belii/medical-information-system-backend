@@ -3,13 +3,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using BusinessLogic;
 using DataAccess;
-using DataAccess.Repositories;
-using DataAccess.RepositoryInterfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerUI;
 using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);

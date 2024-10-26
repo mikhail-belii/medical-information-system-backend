@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "LiEVc7VLENE=",
+  "dgSpecHash": "/p3mvDxIT5I=",
   "success": true,
   "projectFilePath": "C:\\Users\\а\\RiderProjects\\HITS_2grade_2module\\BusinessLogic\\BusinessLogic.csproj",
   "expectedPackageFiles": [
@@ -45,6 +45,7 @@
     "C:\\Users\\а\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\а\\.nuget\\packages\\npgsql\\8.0.5\\npgsql.8.0.5.nupkg.sha512",
     "C:\\Users\\а\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\9.0.0-rc.2\\npgsql.entityframeworkcore.postgresql.9.0.0-rc.2.nupkg.sha512",
+    "C:\\Users\\а\\.nuget\\packages\\quartz\\3.13.0\\quartz.3.13.0.nupkg.sha512",
     "C:\\Users\\а\\.nuget\\packages\\system.codedom\\6.0.0\\system.codedom.6.0.0.nupkg.sha512",
     "C:\\Users\\а\\.nuget\\packages\\system.collections.immutable\\7.0.0\\system.collections.immutable.7.0.0.nupkg.sha512",
     "C:\\Users\\а\\.nuget\\packages\\system.composition\\7.0.0\\system.composition.7.0.0.nupkg.sha512",
