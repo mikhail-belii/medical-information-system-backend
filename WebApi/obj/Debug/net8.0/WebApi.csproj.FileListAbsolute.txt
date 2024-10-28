@@ -154,3 +154,8 @@ C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Microsoft.
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\WebApi.xml
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\obj\Debug\net8.0\WebApi.xml
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.AspNetCore.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Extensions.DependencyInjection.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Extensions.Hosting.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Serialization.SystemTextJson.dll

@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Icd10Entity> Icd10s { get; set; }
     public DbSet<SpecialityEntity> Specialities { get; set; }
     public DbSet<CommentEntity> Comments { get; set; }
+    public DbSet<NotificationLog> NotificationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

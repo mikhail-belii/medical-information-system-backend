@@ -19,6 +19,10 @@
           "Microsoft.IdentityModel.JsonWebTokens": "8.1.2",
           "Newtonsoft.Json": "13.0.3",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2",
+          "Quartz": "3.13.0",
+          "Quartz.AspNetCore": "3.13.0",
+          "Quartz.Extensions.Hosting": "3.13.0",
+          "Quartz.Serialization.SystemTextJson": "3.13.0",
           "Swashbuckle.AspNetCore": "6.4.0"
         },
         "runtime": {
@@ -513,6 +517,36 @@
           }
         }
       },
+      "Microsoft.Extensions.Diagnostics.Abstractions/8.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.Options": "9.0.0-rc.2.24473.5",
+          "System.Diagnostics.DiagnosticSource": "9.0.0-rc.2.24473.5"
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.HealthChecks/8.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.Options": "9.0.0-rc.2.24473.5"
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/8.0.0": {},
+      "Microsoft.Extensions.FileProviders.Abstractions/8.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "9.0.0-rc.2.24473.5"
+        }
+      },
+      "Microsoft.Extensions.Hosting.Abstractions/8.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.Diagnostics.Abstractions": "8.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0-rc.2.24473.5"
+        }
+      },
       "Microsoft.Extensions.Logging/9.0.0-rc.2.24473.5": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "9.0.0-rc.2.24473.5",
@@ -686,6 +720,66 @@
           "lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "Quartz/3.13.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0-rc.2.24473.5"
+        },
+        "runtime": {
+          "lib/net6.0/Quartz.dll": {
+            "assemblyVersion": "3.13.0.0",
+            "fileVersion": "3.13.0.0"
+          }
+        }
+      },
+      "Quartz.AspNetCore/3.13.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "8.0.0",
+          "Quartz.Extensions.Hosting": "3.13.0"
+        },
+        "runtime": {
+          "lib/net8.0/Quartz.AspNetCore.dll": {
+            "assemblyVersion": "3.13.0.0",
+            "fileVersion": "3.13.0.0"
+          }
+        }
+      },
+      "Quartz.Extensions.DependencyInjection/3.13.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.0-rc.2.24473.5",
+          "Microsoft.Extensions.Options": "9.0.0-rc.2.24473.5",
+          "Quartz": "3.13.0"
+        },
+        "runtime": {
+          "lib/net8.0/Quartz.Extensions.DependencyInjection.dll": {
+            "assemblyVersion": "3.13.0.0",
+            "fileVersion": "3.13.0.0"
+          }
+        }
+      },
+      "Quartz.Extensions.Hosting/3.13.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
+          "Quartz.Extensions.DependencyInjection": "3.13.0"
+        },
+        "runtime": {
+          "lib/net8.0/Quartz.Extensions.Hosting.dll": {
+            "assemblyVersion": "3.13.0.0",
+            "fileVersion": "3.13.0.0"
+          }
+        }
+      },
+      "Quartz.Serialization.SystemTextJson/3.13.0": {
+        "dependencies": {
+          "Quartz": "3.13.0"
+        },
+        "runtime": {
+          "lib/net8.0/Quartz.Serialization.SystemTextJson.dll": {
+            "assemblyVersion": "3.13.0.0",
+            "fileVersion": "3.13.0.0"
           }
         }
       },
@@ -874,7 +968,11 @@
           "Microsoft.EntityFrameworkCore": "9.0.0-rc.2.24474.1",
           "Microsoft.IdentityModel.JsonWebTokens": "8.1.2",
           "Newtonsoft.Json": "13.0.3",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2"
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2",
+          "Quartz": "3.13.0",
+          "Quartz.AspNetCore": "3.13.0",
+          "Quartz.Extensions.Hosting": "3.13.0",
+          "Quartz.Serialization.SystemTextJson": "3.13.0"
         },
         "runtime": {
           "BusinessLogic.dll": {
@@ -887,7 +985,11 @@
         "dependencies": {
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
           "Microsoft.IdentityModel.JsonWebTokens": "8.1.2",
-          "Newtonsoft.Json": "13.0.3"
+          "Newtonsoft.Json": "13.0.3",
+          "Quartz": "3.13.0",
+          "Quartz.AspNetCore": "3.13.0",
+          "Quartz.Extensions.Hosting": "3.13.0",
+          "Quartz.Serialization.SystemTextJson": "3.13.0"
         },
         "runtime": {
           "Common.dll": {
@@ -904,7 +1006,11 @@
           "Microsoft.EntityFrameworkCore": "9.0.0-rc.2.24474.1",
           "Microsoft.IdentityModel.JsonWebTokens": "8.1.2",
           "Newtonsoft.Json": "13.0.3",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2"
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2",
+          "Quartz": "3.13.0",
+          "Quartz.AspNetCore": "3.13.0",
+          "Quartz.Extensions.Hosting": "3.13.0",
+          "Quartz.Serialization.SystemTextJson": "3.13.0"
         },
         "runtime": {
           "DataAccess.dll": {
@@ -1117,6 +1223,41 @@
       "path": "microsoft.extensions.dependencymodel/9.0.0-rc.2.24473.5",
       "hashPath": "microsoft.extensions.dependencymodel.9.0.0-rc.2.24473.5.nupkg.sha512"
     },
+    "Microsoft.Extensions.Diagnostics.Abstractions/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JHYCQG7HmugNYUhOl368g+NMxYE/N/AiclCYRNlgCY9eVyiBkOHMwK4x60RYMxv9EL3+rmj1mqHvdCiPpC+D4Q==",
+      "path": "microsoft.extensions.diagnostics.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.diagnostics.abstractions.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-P9SoBuVZhJPpALZmSq72aQEb9ryP67EdquaCZGXGrrcASTNHYdrUhnpgSwIipgM5oVC+dKpRXg5zxobmF9xr5g==",
+      "path": "microsoft.extensions.diagnostics.healthchecks/8.0.0",
+      "hashPath": "microsoft.extensions.diagnostics.healthchecks.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-AT2qqos3IgI09ok36Qag9T8bb6kHJ3uT9Q5ki6CySybFsK6/9JbvQAgAHf1pVEjST0/N4JaFaCbm40R5edffwg==",
+      "path": "microsoft.extensions.diagnostics.healthchecks.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.diagnostics.healthchecks.abstractions.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileProviders.Abstractions/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ZbaMlhJlpisjuWbvXr4LdAst/1XxH3vZ6A0BsgTphZ2L4PGuxRLz7Jr/S7mkAAnOn78Vu0fKhEgNF5JO3zfjqQ==",
+      "path": "microsoft.extensions.fileproviders.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Hosting.Abstractions/8.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-AG7HWwVRdCHlaA++1oKDxLsXIBxmDpMPb3VoyOoAghEWnkUvEAdYQUwnV4jJbAaa/nMYNiEh5ByoLauZBEiovg==",
+      "path": "microsoft.extensions.hosting.abstractions/8.0.0",
+      "hashPath": "microsoft.extensions.hosting.abstractions.8.0.0.nupkg.sha512"
+    },
     "Microsoft.Extensions.Logging/9.0.0-rc.2.24473.5": {
       "type": "package",
       "serviceable": true,
@@ -1228,6 +1369,41 @@
       "sha512": "sha512-25aObiOmb/nG146o7MbGbZAn+NFaCVK6XJr/t5SuHhKM85lMZ+HzjBiOGI6k0KKc3oWLIglE92iS336aQMPo6w==",
       "path": "npgsql.entityframeworkcore.postgresql/9.0.0-rc.2",
       "hashPath": "npgsql.entityframeworkcore.postgresql.9.0.0-rc.2.nupkg.sha512"
+    },
+    "Quartz/3.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ddD1CPjWcDMbKdAhzuna3Ng23Sdv1YtuHbFMdAAFw0eBEj9jnadYkDWiKGo/c7BMnbI/ruuyd370sKVgdMCkDA==",
+      "path": "quartz/3.13.0",
+      "hashPath": "quartz.3.13.0.nupkg.sha512"
+    },
+    "Quartz.AspNetCore/3.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jZcr+V+D6nTnOjFAXq4PVyHs/e+meVHyTZ2jbmeF4n+oOi7Au1FdsJ9e+1ukruXGF3SZXDmjFWGD/WDdtj5tJw==",
+      "path": "quartz.aspnetcore/3.13.0",
+      "hashPath": "quartz.aspnetcore.3.13.0.nupkg.sha512"
+    },
+    "Quartz.Extensions.DependencyInjection/3.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H9+hAnJI/TNKF+Po++jEzLRNXOfqpr3N0CZzVsDcS1apGQ4ELU+6OdWoNVN2l+Se4yW8HApBb3NHDQL4mf4E9A==",
+      "path": "quartz.extensions.dependencyinjection/3.13.0",
+      "hashPath": "quartz.extensions.dependencyinjection.3.13.0.nupkg.sha512"
+    },
+    "Quartz.Extensions.Hosting/3.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IEVjySmI5Jj3kcUUe4z+DXYJK0KggtQfHymwAps7W8qsb1adg6KpAgutBNz0OdD9WKjUf2dRiOM74pVXKj0hkQ==",
+      "path": "quartz.extensions.hosting/3.13.0",
+      "hashPath": "quartz.extensions.hosting.3.13.0.nupkg.sha512"
+    },
+    "Quartz.Serialization.SystemTextJson/3.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-e7ofQ7PYifDNf5OmXtWpPBIgDMdYIKXwF6AgJ9AeDp2mzOHF+6KOyOvIeWUFZwksX7Z6RYkpm/YWkSz9JJ0rGQ==",
+      "path": "quartz.serialization.systemtextjson/3.13.0",
+      "hashPath": "quartz.serialization.systemtextjson.3.13.0.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.4.0": {
       "type": "package",

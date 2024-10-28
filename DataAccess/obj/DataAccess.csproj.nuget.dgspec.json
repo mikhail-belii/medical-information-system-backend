@@ -61,6 +61,18 @@
             "Quartz": {
               "target": "Package",
               "version": "[3.13.0, )"
+            },
+            "Quartz.AspNetCore": {
+              "target": "Package",
+              "version": "[3.13.0, )"
+            },
+            "Quartz.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[3.13.0, )"
+            },
+            "Quartz.Serialization.SystemTextJson": {
+              "target": "Package",
+              "version": "[3.13.0, )"
             }
           },
           "imports": [
@@ -166,6 +178,18 @@
               "version": "[9.0.0-rc.2, )"
             },
             "Quartz": {
+              "target": "Package",
+              "version": "[3.13.0, )"
+            },
+            "Quartz.AspNetCore": {
+              "target": "Package",
+              "version": "[3.13.0, )"
+            },
+            "Quartz.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[3.13.0, )"
+            },
+            "Quartz.Serialization.SystemTextJson": {
               "target": "Package",
               "version": "[3.13.0, )"
             }

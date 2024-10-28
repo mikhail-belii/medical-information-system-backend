@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Quartz;
 using WebApi;
+using WebApi.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -71,6 +73,19 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddQuartz(configure =>
+{
+    var jobKey = new JobKey(nameof(SendEmailJob));
+
+    configure.AddJob<SendEmailJob>(jobKey)
+        .AddTrigger(trigger => trigger.ForJob(jobKey).WithSimpleSchedule(
+            schedule => schedule.WithIntervalInMinutes(1).RepeatForever()));
+});
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
+    
 var app = builder.Build();
 
 app.UseSwagger();

@@ -23,7 +23,7 @@ public class EmailSender : IEmailSender
         
         var credentials = new NetworkCredential(emailFrom, password);
         var msg = new MimeMessage();
-        msg.From.Add(new MailboxAddress("mishanya", emailFrom));
+        msg.From.Add(new MailboxAddress("MIS Try Not To Die", emailFrom));
         msg.To.Add(new MailboxAddress(name, email));
         msg.Subject = subject;
         msg.Body = new TextPart("plain")
