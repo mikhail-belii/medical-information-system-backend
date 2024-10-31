@@ -1,4 +1,5 @@
-﻿using DataAccess.RepositoryInterfaces;
+﻿using BusinessLogic.ServiceInterfaces;
+using MailKit.Net.Smtp;
 using Quartz;
 
 namespace WebApi.Jobs;
@@ -6,18 +7,18 @@ namespace WebApi.Jobs;
 [DisallowConcurrentExecution]
 public class SendEmailJob : IJob
 {
-    private readonly IEmailRepository _emailRepository;
+    private readonly IEmailService _emailService;
     private readonly IEmailSender _emailSender;
 
-    public SendEmailJob(IEmailRepository emailRepository, IEmailSender emailSender)
+    public SendEmailJob(IEmailSender emailSender, IEmailService emailService)
     {
-        _emailRepository = emailRepository;
         _emailSender = emailSender;
+        _emailService = emailService;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var res = await _emailRepository.CheckInspections();
+        var res = await _emailService.CheckInspections();
         if (res != null)
         {
             foreach (var (patient, doctor, inspection) in res)
@@ -25,11 +26,22 @@ public class SendEmailJob : IJob
                 var name = doctor.Name;
                 var email = doctor.Email;
                 const string subject = "Пропущено запланированное посещение";
-                var message = $"Здравствуйте! Это сообщение автоматически сгенерировано системой.\n" +
+                var message = $"Здравствуйте, {name}! Это сообщение автоматически сгенерировано системой.\n" +
                               $"На него отвечать не требуется.\n\n" +
                               $"{inspection.Date} вы запланировали повторный визит пациента {patient.Name} на {inspection.NextVisitDate}.";
-                await _emailSender.SendEmailAsync(name, email, subject, message);
-                await _emailRepository.AddNotification(inspection.Id);
+                try
+                {
+                    await _emailSender.SendEmailAsync(name, email, subject, message);
+                    await _emailService.AddNotification(inspection.Id, true);
+                }
+                catch (SmtpCommandException ex)
+                {
+                    await _emailService.AddNotification(inspection.Id, false, ex.Message);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
             }
         }
     }

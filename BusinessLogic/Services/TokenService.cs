@@ -33,4 +33,10 @@ public class TokenService : ITokenService
         await Task.CompletedTask;
         return userId;
     }
+
+    public async Task ClearTokens()
+    {
+        _tokens.Clear();
+        await Task.CompletedTask;
+    }
 }

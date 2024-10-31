@@ -3,10 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using BusinessLogic.ServiceInterfaces;
 using Common.DbModels;
-using DataAccess.RepositoryInterfaces;
 using Common.DtoModels.Doctor;
 using Common.DtoModels.Others;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,17 +13,16 @@ namespace BusinessLogic.Services;
 
 internal class DoctorService : IDoctorService
 {
-    private readonly IDoctorRepository _doctorRepository;
     private readonly IConfiguration _configuration;
+    private readonly AppDbContext _dbContext;
     
-    public DoctorService(IDoctorRepository doctorRepository, IConfiguration configuration)
+    public DoctorService(IConfiguration configuration, AppDbContext dbContext)
     {
-        _doctorRepository = doctorRepository;
         _configuration = configuration;
+        _dbContext = dbContext;
     }
     
-    public async Task<(TokenResponseModel, Guid)> Register(DoctorRegisterModel doctorRegisterModel,
-        CancellationToken cancellationToken = default)
+    public async Task<(TokenResponseModel, Guid)> Register(DoctorRegisterModel doctorRegisterModel)
     {
         DoctorEntity doctorEntity = new DoctorEntity()
         {
@@ -41,17 +39,19 @@ internal class DoctorService : IDoctorService
             Comments = new List<CommentEntity>()
         };
 
-        await _doctorRepository.Register(doctorEntity, cancellationToken: default);
+        await _dbContext.Doctors.AddAsync(doctorEntity);
+        await _dbContext.SaveChangesAsync();
 
         var token = CreateToken(doctorEntity);
 
         return (token, doctorEntity.Id);
     }
 
-    public async Task<(TokenResponseModel, Guid)> Login(LoginCredentialsModel loginCredentialsModel, CancellationToken cancellationToken = default)
+    public async Task<(TokenResponseModel, Guid)> Login(LoginCredentialsModel loginCredentialsModel)
     {
-        var doctor = await _doctorRepository
-            .GetByCredentials(loginCredentialsModel.Email, loginCredentialsModel.Password);
+        var doctor = await _dbContext.Doctors
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Email.ToLower() == loginCredentialsModel.Email.ToLower() && d.Password == loginCredentialsModel.Password);
 
         if (doctor != null)
         {
@@ -64,21 +64,25 @@ internal class DoctorService : IDoctorService
         }, Guid.Empty);
     }
 
-    public async Task<bool> IsEmailUnique(string email,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> IsEmailUnique(string email)
     {
-        return await _doctorRepository.IsEmailUnique(email);
+        var doctor = await _dbContext.Doctors
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email == email);
+        return doctor == null;
     }
 
-    public async Task<bool> IsSpecialityExisting(DoctorRegisterModel doctorRegisterModel,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> IsSpecialityExisting(DoctorRegisterModel doctorRegisterModel)
     {
-        return await _doctorRepository.IsSpecialityExisting(doctorRegisterModel.Speciality);
+        var speciality = await _dbContext.Specialities
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == doctorRegisterModel.Speciality);
+        return speciality != null;
     }
 
     public async Task<DoctorEntity?> GetDoctorById(Guid id)
     {
-        return await _doctorRepository.GetDoctorById(id);
+        return await _dbContext.Doctors.FirstOrDefaultAsync(d => d.Id == id);
     }
 
     public TokenResponseModel CreateToken(DoctorEntity doctorEntity)
@@ -109,7 +113,9 @@ internal class DoctorService : IDoctorService
 
     public async Task<DoctorModel> GetProfile(Guid userId)
     {
-        var doctorEntity = await _doctorRepository.GetProfile(userId);
+        var doctorEntity = await _dbContext.Doctors
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == userId);
         
         var doctorModel = new DoctorModel
         {
@@ -127,6 +133,14 @@ internal class DoctorService : IDoctorService
 
     public async Task EditProfile(Guid id, DoctorEditModel doctorEditModel)
     {
-        await _doctorRepository.EditProfile(id, doctorEditModel);
+        await _dbContext.Doctors
+            .Where(d => d.Id == id)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(e => e.Email, doctorEditModel.Email)
+                .SetProperty(e => e.Name, doctorEditModel.Name)
+                .SetProperty(e => e.Birthday, doctorEditModel.BirthDay)
+                .SetProperty(e => e.Gender, doctorEditModel.Gender)
+                .SetProperty(e => e.Phone, doctorEditModel.Phone));
+        await _dbContext.SaveChangesAsync();
     }
 }

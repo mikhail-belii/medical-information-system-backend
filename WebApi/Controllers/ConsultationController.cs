@@ -7,8 +7,6 @@ using Common.DtoModels.Inspection;
 using Common.DtoModels.Others;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Npgsql.BackendMessages;
 
 namespace WebApi.Controllers;
 

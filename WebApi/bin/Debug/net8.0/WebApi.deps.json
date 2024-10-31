@@ -9,7 +9,6 @@
       "WebApi/1.0.0": {
         "dependencies": {
           "BusinessLogic": "1.0.0",
-          "DataAccess": "1.0.0",
           "MailKit": "4.8.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
           "Microsoft.AspNetCore.OpenApi": "8.0.8",
@@ -962,7 +961,6 @@
       "BusinessLogic/1.0.0": {
         "dependencies": {
           "Common": "1.0.0",
-          "DataAccess": "1.0.0",
           "MailKit": "4.8.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
           "Microsoft.EntityFrameworkCore": "9.0.0-rc.2.24474.1",
@@ -993,27 +991,6 @@
         },
         "runtime": {
           "Common.dll": {
-            "assemblyVersion": "1.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "DataAccess/1.0.0": {
-        "dependencies": {
-          "Common": "1.0.0",
-          "MailKit": "4.8.0",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
-          "Microsoft.EntityFrameworkCore": "9.0.0-rc.2.24474.1",
-          "Microsoft.IdentityModel.JsonWebTokens": "8.1.2",
-          "Newtonsoft.Json": "13.0.3",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0-rc.2",
-          "Quartz": "3.13.0",
-          "Quartz.AspNetCore": "3.13.0",
-          "Quartz.Extensions.Hosting": "3.13.0",
-          "Quartz.Serialization.SystemTextJson": "3.13.0"
-        },
-        "runtime": {
-          "DataAccess.dll": {
             "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -1565,11 +1542,6 @@
       "sha512": ""
     },
     "Common/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "DataAccess/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

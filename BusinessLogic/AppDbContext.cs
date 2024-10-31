@@ -1,8 +1,8 @@
-﻿using DataAccess.Configurations;
+﻿using BusinessLogic.Configurations;
 using Common.DbModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess;
+namespace BusinessLogic;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

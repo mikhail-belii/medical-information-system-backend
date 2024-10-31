@@ -1,18 +1,18 @@
-﻿using Common.DbModels;
-using DataAccess.RepositoryInterfaces;
+﻿using BusinessLogic.ServiceInterfaces;
+using Common.DbModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.Repositories;
+namespace BusinessLogic.Services;
 
-public class EmailRepository : IEmailRepository
+public class EmailService : IEmailService
 {
     private readonly AppDbContext _dbContext;
 
-    public EmailRepository(AppDbContext dbContext)
+    public EmailService(AppDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-
+    
     public async Task<List<(PatientEntity, DoctorEntity, InspectionEntity)>?> CheckInspections()
     {
         var inspections = await _dbContext.Inspections
@@ -35,13 +35,28 @@ public class EmailRepository : IEmailRepository
         return list;
     }
 
-    public async Task AddNotification(Guid id)
+    public async Task AddNotification(Guid id, bool isSent)
     {
         var notification = new NotificationLog
         {
             Id = Guid.NewGuid(),
             InspectionId = id,
-            SentDate = DateTime.UtcNow
+            SentDate = DateTime.UtcNow,
+            IsNotificationSent = isSent
+        };
+        await _dbContext.NotificationLogs.AddAsync(notification);
+        await _dbContext.SaveChangesAsync();
+    }
+    
+    public async Task AddNotification(Guid id, bool isSent, string exceptionMsg)
+    {
+        var notification = new NotificationLog
+        {
+            Id = Guid.NewGuid(),
+            InspectionId = id,
+            SentDate = DateTime.UtcNow,
+            IsNotificationSent = isSent,
+            ExceptionMessage = exceptionMsg
         };
         await _dbContext.NotificationLogs.AddAsync(notification);
         await _dbContext.SaveChangesAsync();

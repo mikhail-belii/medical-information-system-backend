@@ -14,7 +14,7 @@ public static class Extensions
         serviceCollection.AddScoped<IInspectionService, InspectionService>();
         serviceCollection.AddScoped<IConsultationService, ConsultationService>();
         serviceCollection.AddScoped<IReportService, ReportService>();
-        serviceCollection.AddScoped<IReportService, ReportService>();
+        serviceCollection.AddScoped<IEmailService, EmailService>();
         serviceCollection.AddSingleton<ITokenService, TokenService>();
         return serviceCollection;
     }

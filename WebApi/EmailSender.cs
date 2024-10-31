@@ -32,8 +32,8 @@ public class EmailSender : IEmailSender
         };
 
         using (var client = new SmtpClient()) {
-            await client.ConnectAsync("smtp.mail.ru", 465, true);
-            await client.AuthenticateAsync(credentials);
+            await client.ConnectAsync("smtp.mail.ru", 465, true, cancellationToken: default);
+            await client.AuthenticateAsync(credentials, cancellationToken: default);
             await client.SendAsync(msg);
             await client.DisconnectAsync(true, cancellationToken: default);
         }

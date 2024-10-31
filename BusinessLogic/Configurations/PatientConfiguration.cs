@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace DataAccess.Configurations;
+namespace BusinessLogic.Configurations;
 
 public class PatientConfiguration : IEntityTypeConfiguration<PatientEntity>
 {

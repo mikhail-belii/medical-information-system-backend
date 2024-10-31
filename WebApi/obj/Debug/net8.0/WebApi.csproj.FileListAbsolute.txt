@@ -136,8 +136,6 @@ C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\tr\Microso
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
-C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\DataAccess.dll
-C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\DataAccess.pdb
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Common.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Common.pdb
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\BusinessLogic.dll

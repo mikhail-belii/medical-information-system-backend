@@ -1,9 +1,7 @@
-﻿using System.ComponentModel;
-using BusinessLogic.ServiceInterfaces;
+﻿using BusinessLogic.ServiceInterfaces;
 using Common;
 using Common.DtoModels.Inspection;
 using Common.DtoModels.Others;
-using DataAccess.RepositoryInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

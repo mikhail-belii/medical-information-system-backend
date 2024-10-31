@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessLogic;
-using DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -36,7 +35,6 @@ builder.Services.AddDbContext<AppDbContext>(
     {
         options.UseNpgsql(configuration.GetConnectionString(nameof(AppDbContext)));
     });
-builder.Services.AddDataBase();
 builder.Services.AddBusinessLogic();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddSwaggerGen(c =>
@@ -75,11 +73,22 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddQuartz(configure =>
 {
-    var jobKey = new JobKey(nameof(SendEmailJob));
+    var emailJobKey = new JobKey(nameof(SendEmailJob));
+    var jwtJobKey = new JobKey(nameof(RemoveJwtJob));
+    
+    var intervalForEmailSender = configuration
+        .GetSection("Scheduler:EmailSenderIntervalInMinutes")
+        .Get<int>();
+    var intervalForRemovingJwt = configuration
+        .GetSection("Scheduler:JwtRemoverIntervalInMinutes")
+        .Get<int>();
 
-    configure.AddJob<SendEmailJob>(jobKey)
-        .AddTrigger(trigger => trigger.ForJob(jobKey).WithSimpleSchedule(
-            schedule => schedule.WithIntervalInMinutes(1).RepeatForever()));
+    configure.AddJob<SendEmailJob>(emailJobKey)
+        .AddTrigger(trigger => trigger.ForJob(emailJobKey).WithSimpleSchedule(
+            schedule => schedule.WithIntervalInMinutes(intervalForEmailSender).RepeatForever()));
+    configure.AddJob<RemoveJwtJob>(jwtJobKey)
+        .AddTrigger(trigger => trigger.ForJob(jwtJobKey).WithSimpleSchedule(
+            schedule => schedule.WithIntervalInMinutes(intervalForRemovingJwt).RepeatForever()));
 });
 builder.Services.AddQuartzHostedService(options =>
 {

@@ -2,9 +2,7 @@
 using BusinessLogic.ServiceInterfaces;
 using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
-using Common.DtoModels.Patient;
 using Common.DtoModels.Speciality;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;

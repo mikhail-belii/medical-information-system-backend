@@ -12,6 +12,7 @@ public interface IPatientService
         InspectionCreateModel inspectionCreateModel,
         Guid doctorId, 
         Guid patientId);
+    Task<Guid?> FindBaseInspectionId(Guid? inspectionId);
 
     public Task<PatientPagedListModel> GetPatientsList(
         string name,

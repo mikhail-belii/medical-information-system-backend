@@ -269,7 +269,7 @@ public class PatientController : ControllerBase
         {
             return Ok(await _patientService.GetPatientById(id));
         }
-        catch (InvalidParameterException)
+        catch (KeyNotFoundException)
         {
             return NotFound(new ResponseModel
             {
