@@ -232,7 +232,8 @@ public class InspectionService : IInspectionService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<List<InspectionPreviewModel>> GetInspectionChain(Guid id)
+    public async Task<List<InspectionPreviewModel>> GetInspectionChain(Guid id,
+        CancellationToken cancellationToken = default)
     {
         var inspection = await _dbContext.Inspections
             .Include(i => i.Patient)
@@ -240,7 +241,7 @@ public class InspectionService : IInspectionService
             .Include(i => i.Diagnoses)
             .Include(i => i.Consultations)!
             .ThenInclude(c => c.Comments)
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
         if (inspection == null)
         {
             throw new KeyNotFoundException();
@@ -282,7 +283,7 @@ public class InspectionService : IInspectionService
                 Code = await _dbContext.Icd10s
                     .Where(i => i.Id == diagnosisEntity.Icd10Id)
                     .Select(i => i.Code)
-                    .FirstOrDefaultAsync(),
+                    .FirstOrDefaultAsync(cancellationToken),
                 CreateTime = diagnosisEntity.CreateTime,
                 Description = diagnosisEntity.Description,
                 Id = diagnosisEntity.Id,

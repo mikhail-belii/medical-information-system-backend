@@ -6,6 +6,10 @@ namespace BusinessLogic.ServiceInterfaces;
 public interface IDictionaryService
 {
     public Task<SpecialtiesPagedListModel> GetSpecialities(string name, int page, int size);
-    public Task<IEnumerable<Icd10RecordModel>> GetRoots();
-    public Task<Icd10SearchModel> SearchForDiagnoses(string request, int page, int size);
+    public Task<IEnumerable<Icd10RecordModel>> GetRoots(CancellationToken cancellationToken = default);
+    public Task<Icd10SearchModel> SearchForDiagnoses(
+        string request, 
+        int page, 
+        int size,
+        CancellationToken cancellationToken = default);
 }

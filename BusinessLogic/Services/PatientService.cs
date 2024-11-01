@@ -268,7 +268,8 @@ public class PatientService : IPatientService
         bool onlyMine,
         int page,
         int size, 
-        Guid doctorId)
+        Guid doctorId,
+        CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Patients.AsQueryable();
         
@@ -326,13 +327,13 @@ public class PatientService : IPatientService
         {
             Size = size,
             Current = page,
-            Count = (int)Math.Ceiling((double) await query.CountAsync() / size)
+            Count = (int)Math.Ceiling((double) await query.CountAsync(cancellationToken) / size)
         };
 
         var patients = await query
             .Skip((page - 1) * size)
             .Take(size)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var patientModels = new List<PatientModel>();
         foreach (var patient in patients)
@@ -362,9 +363,10 @@ public class PatientService : IPatientService
         bool grouped,
         List<Guid> icdRoots,
         int page,
-        int size)
+        int size,
+        CancellationToken cancellationToken = default)
     {
-        if (await _dbContext.Patients.FindAsync(id) == null)
+        if (await _dbContext.Patients.FindAsync(id, cancellationToken) == null)
         {
             throw new KeyNotFoundException();
         }
@@ -384,7 +386,7 @@ public class PatientService : IPatientService
                 var rootCode = await _dbContext.Icd10s
                     .Where(i => i.Id == rootId)
                     .Select(i => i.Code)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 if (rootCode != null)
                 {
@@ -408,7 +410,7 @@ public class PatientService : IPatientService
                 .Where(i => i.PreviousInspectionId == null);
         }
 
-        var inspections = await query.ToListAsync();
+        var inspections = await query.ToListAsync(cancellationToken);
 
         var previewModels = new List<InspectionPreviewModel>();
         foreach (var inspection in inspections)
@@ -428,7 +430,7 @@ public class PatientService : IPatientService
             var diagnosisEntity = inspection.Diagnoses
                 .FirstOrDefault(d => d.Type == DiagnosisType.Main);
             var icd10 = await _dbContext.Icd10s
-                .FirstOrDefaultAsync(i => i.Id == diagnosisEntity.Icd10Id);
+                .FirstOrDefaultAsync(i => i.Id == diagnosisEntity.Icd10Id, cancellationToken);
             var diagnosisModel = new DiagnosisModel
             {
                 Code = icd10.Code,
@@ -440,7 +442,7 @@ public class PatientService : IPatientService
             };
             model.Diagnosis = diagnosisModel;
             var hasNested = await _dbContext.Inspections
-                .AnyAsync(i => i.PreviousInspectionId == model.Id);
+                .AnyAsync(i => i.PreviousInspectionId == model.Id, cancellationToken);
             var hasChain = model.PreviousId == null && hasNested;
             model.HasNested = hasNested;
             model.HasChain = hasChain;
@@ -469,7 +471,10 @@ public class PatientService : IPatientService
         return finalModel;
     }
 
-    public async Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request)
+    public async Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(
+        Guid id, 
+        string request,
+        CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Inspections
             .Include(i => i.Patient)
@@ -477,7 +482,7 @@ public class PatientService : IPatientService
             .Include(i => i.Diagnoses)
             .AsQueryable();
 
-        if (await _dbContext.Patients.FindAsync(id) == null)
+        if (await _dbContext.Patients.FindAsync(id, cancellationToken) == null)
         {
             throw new KeyNotFoundException();
         }
@@ -503,7 +508,7 @@ public class PatientService : IPatientService
             }
         }
 
-        await query.ToListAsync();
+        await query.ToListAsync(cancellationToken);
         var list = query
             .Where(inspection => !query.Any(i => i.PreviousInspectionId == inspection.Id))
             .ToList();

@@ -14,7 +14,11 @@ public class ReportService : IReportService
         _dbContext = dbContext;
     }
 
-    public async Task<IcdRootsReportModel> GetReport(DateTime start, DateTime end, List<Guid> icdRoots)
+    public async Task<IcdRootsReportModel> GetReport(
+        DateTime start,
+        DateTime end,
+        List<Guid> icdRoots,
+        CancellationToken cancellationToken = default)
     {
         var roots = new List<string>();
         
@@ -23,7 +27,7 @@ public class ReportService : IReportService
             roots = (await _dbContext.Icd10s
                 .Where(i => i.IcdParentId == null)
                 .Select(i => i.Code)
-                .ToListAsync())!;
+                .ToListAsync(cancellationToken))!;
         }
         else
         {
@@ -32,7 +36,7 @@ public class ReportService : IReportService
                 var root = await _dbContext.Icd10s
                     .Where(i => i.Id == id)
                     .Select(i => i.Code)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(cancellationToken);
                 roots.Add(root);
             }
         }
@@ -64,7 +68,7 @@ public class ReportService : IReportService
             .Include(i => i.Patient)
             .Where(i => i.Date >= start)
             .Where(i => i.Date <= end)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var patientRecords = new Dictionary<Guid, IcdRootsReportRecordModel>();
         
@@ -85,7 +89,7 @@ public class ReportService : IReportService
             var mainDiagnosis = inspection.Diagnoses
                 .FirstOrDefault(d => d.Type == DiagnosisType.Main);
             var icd = await _dbContext.Icd10s
-                .FirstOrDefaultAsync(i => i.Id == mainDiagnosis.Icd10Id);
+                .FirstOrDefaultAsync(i => i.Id == mainDiagnosis.Icd10Id, cancellationToken);
             var rootCode = icd.IcdRootCode;
             if (roots.Contains(rootCode))
             {

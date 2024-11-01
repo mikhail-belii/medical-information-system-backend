@@ -73,7 +73,8 @@ public class ConsultationService : IConsultationService
         bool grouped, 
         List<Guid> icdRoots,
         int page,
-        int size)
+        int size,
+        CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Inspections
             .Include(i => i.Patient)
@@ -90,14 +91,14 @@ public class ConsultationService : IConsultationService
                 var rootCode = await _dbContext.Icd10s
                     .Where(i => i.Id == rootId)
                     .Select(i => i.Code)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 if (rootCode != null)
                 {
                     var icdChildrens = await _dbContext.Icd10s
                         .Where(i => i.IcdRootCode == rootCode)
                         .Select(i => i.Id)
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
 
                     childrens.AddRange(icdChildrens);
                 }

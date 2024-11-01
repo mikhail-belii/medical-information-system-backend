@@ -56,12 +56,12 @@ public class DictionaryService : IDictionaryService
         return model;
     }
 
-    public async Task<IEnumerable<Icd10RecordModel>> GetRoots()
+    public async Task<IEnumerable<Icd10RecordModel>> GetRoots(CancellationToken cancellationToken = default)
     {
         var list = await _dbContext.Icd10s
             .Where(i => i.IcdParentId == null)
             .OrderBy(i => i.Code)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         var list2 = new List<Icd10RecordModel>();
         foreach (var icd in list)
         {
@@ -78,7 +78,11 @@ public class DictionaryService : IDictionaryService
         return list2;
     }
 
-    public async Task<Icd10SearchModel> SearchForDiagnoses(string request, int page, int size)
+    public async Task<Icd10SearchModel> SearchForDiagnoses(
+        string request,
+        int page,
+        int size,
+        CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Icd10s.AsQueryable();
         
@@ -95,13 +99,13 @@ public class DictionaryService : IDictionaryService
         {
             Size = size,
             Current = page,
-            Count = (int)Math.Ceiling((double) await query.CountAsync() / size)
+            Count = (int)Math.Ceiling((double) await query.CountAsync(cancellationToken) / size)
         };
         
         var icd10s = await query
             .Skip((page - 1) * size)
             .Take(size)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         
         var icd10RecordModels = new List<Icd10RecordModel>();
         foreach (var icd in icd10s)

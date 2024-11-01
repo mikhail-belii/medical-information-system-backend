@@ -22,14 +22,19 @@ public interface IPatientService
         bool onlyMine,
         int page,
         int size,
-        Guid doctorId);
+        Guid doctorId,
+        CancellationToken cancellationToken = default);
 
     public Task<InspectionPagedListModel> GetInspectionsList(
         Guid id,
         bool grouped,
         List<Guid> icdRoots,
         int page,
-        int size);
+        int size,
+        CancellationToken cancellationToken = default);
 
-    public Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(Guid id, string request);
+    public Task<List<InspectionShortModel>> GetInspectionsWithoutChildren(
+        Guid id,
+        string request,
+        CancellationToken cancellationToken = default);
 }

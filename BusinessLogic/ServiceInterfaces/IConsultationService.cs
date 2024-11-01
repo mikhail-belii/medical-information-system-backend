@@ -12,7 +12,8 @@ public interface IConsultationService
         bool grouped,
         List<Guid> icdRoots,
         int page,
-        int size);
+        int size,
+        CancellationToken cancellationToken = default);
 
     public Task<Guid> AddComment(
         Guid consultationId,
