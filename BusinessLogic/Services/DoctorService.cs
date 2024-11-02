@@ -1,28 +1,23 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using BusinessLogic.ServiceInterfaces;
+﻿using BusinessLogic.ServiceInterfaces;
 using Common.DbModels;
 using Common.DtoModels.Doctor;
 using Common.DtoModels.Others;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 
 namespace BusinessLogic.Services;
 
 internal class DoctorService : IDoctorService
 {
-    private readonly IConfiguration _configuration;
     private readonly AppDbContext _dbContext;
+    private readonly ITokenService _tokenService;
     
-    public DoctorService(IConfiguration configuration, AppDbContext dbContext)
+    public DoctorService(AppDbContext dbContext, ITokenService tokenService)
     {
-        _configuration = configuration;
         _dbContext = dbContext;
+        _tokenService = tokenService;
     }
     
-    public async Task<(TokenResponseModel, Guid)> Register(DoctorRegisterModel doctorRegisterModel)
+    public async Task<TokenResponseModel> Register(DoctorRegisterModel doctorRegisterModel)
     {
         DoctorEntity doctorEntity = new DoctorEntity()
         {
@@ -42,12 +37,16 @@ internal class DoctorService : IDoctorService
         await _dbContext.Doctors.AddAsync(doctorEntity);
         await _dbContext.SaveChangesAsync();
 
-        var token = CreateToken(doctorEntity);
+        var strToken = await _tokenService.CreateToken(doctorEntity.Id);
+        var token = new TokenResponseModel
+        {
+            Token = strToken
+        };
 
-        return (token, doctorEntity.Id);
+        return token;
     }
 
-    public async Task<(TokenResponseModel, Guid)> Login(LoginCredentialsModel loginCredentialsModel)
+    public async Task<TokenResponseModel> Login(LoginCredentialsModel loginCredentialsModel)
     {
         var doctor = await _dbContext.Doctors
             .AsNoTracking()
@@ -55,13 +54,14 @@ internal class DoctorService : IDoctorService
 
         if (doctor != null)
         {
-            var token = CreateToken(doctor);
-            return (token, doctor.Id);
+            var strToken = await _tokenService.CreateToken(doctor.Id);
+            var token = new TokenResponseModel
+            {
+                Token = strToken
+            };
+            return token;
         }
-        return (new TokenResponseModel
-        {
-            Token = ""
-        }, Guid.Empty);
+        return (new TokenResponseModel { Token = "" });
     }
 
     public async Task<bool> IsEmailUnique(string email)
@@ -83,32 +83,6 @@ internal class DoctorService : IDoctorService
     public async Task<DoctorEntity?> GetDoctorById(Guid id)
     {
         return await _dbContext.Doctors.FirstOrDefaultAsync(d => d.Id == id);
-    }
-
-    public TokenResponseModel CreateToken(DoctorEntity doctorEntity)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity([
-                new Claim(ClaimTypes.Name, doctorEntity.Id.ToString()),
-                new Claim(ClaimTypes.Email, doctorEntity.Email)
-            ]),
-            Expires = DateTime.UtcNow.AddMinutes(60),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"]
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        var tokenResponseModel = new TokenResponseModel
-        {
-            Token = tokenHandler.WriteToken(token)
-        };
-
-        return tokenResponseModel;
     }
 
     public async Task<DoctorModel> GetProfile(Guid userId)

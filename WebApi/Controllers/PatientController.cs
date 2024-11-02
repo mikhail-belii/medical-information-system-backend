@@ -7,7 +7,6 @@ using Common.DtoModels.Patient;
 using Common.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Security;
 
 namespace WebApi.Controllers;
 
@@ -22,6 +21,17 @@ public class PatientController : ControllerBase
     {
         _tokenService = tokenService;
         _patientService = patientService;
+    }
+    
+    private async Task<Guid> EnsureTokenIsValid()
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        if (! await _tokenService.IsTokenValid(token))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return await _tokenService.GetUserIdFromToken(token);
     }
 
     /// <summary>
@@ -39,36 +49,38 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<Guid>> CreatePatient([FromBody] PatientCreateModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
+        try
+        {
+            var userId = await EnsureTokenIsValid();
+
+            var isValid = ModelState.IsValid;
+
+            if (model.Birthday > DateTime.UtcNow)
+            {
+                ModelState.AddModelError("Birthday",
+                    "Birth date can't be later than today");
+                isValid = false;
+            }
+
+            if (model.Gender is not (Gender.Female or Gender.Male))
+            {
+                ModelState.AddModelError("Gender",
+                    "Gender must be Male or Female");
+                isValid = false;
+            }
+
+            if (!isValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var patientId = await _patientService.CreatePatient(model, userId);
+            return Ok(patientId);
+        }
+        catch (UnauthorizedAccessException)
         {
             return Unauthorized();
         }
-
-        var isValid = ModelState.IsValid;
-        
-        if (model.Birthday > DateTime.UtcNow)
-        {
-            ModelState.AddModelError("Birthday",
-                "Birth date can't be later than today");
-            isValid = false;
-        }
-        
-        if (model.Gender is not (Gender.Female or Gender.Male))
-        {
-            ModelState.AddModelError("Gender",
-                "Gender must be Male or Female");
-            isValid = false;
-        }
-        
-        if (!isValid)
-        {
-            return BadRequest(ModelState);
-        }
-        
-        var patientId = await _patientService.CreatePatient(model, userId);
-        return Ok(patientId);
     }
 
     /// <summary>
@@ -98,35 +110,35 @@ public class PatientController : ControllerBase
         [FromQuery(Name = "scheduledVisits"), DefaultValue(false)] bool? scheduledVisits,
         [FromQuery(Name = "onlyMine"), DefaultValue(false)] bool? onlyMine,
         [FromQuery(Name = "page"), DefaultValue(1)] int page,
-        [FromQuery(Name = "size"), DefaultValue(5)] int size
-        )
+        [FromQuery(Name = "size"), DefaultValue(5)] int size)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
+        try
+        {
+            var userId = await EnsureTokenIsValid();
+            if (size <= 0 || page <= 0)
+            {
+                return BadRequest(new ResponseModel
+                {
+                    Status = "Error",
+                    Message = "Page and size values must be greater than 0"
+                });
+            }
+
+            var list = await _patientService.GetPatientsList(
+                (string.IsNullOrEmpty(name)) ? "" : name,
+                conclusions,
+                sorting,
+                scheduledVisits == true,
+                onlyMine == true,
+                page,
+                size,
+                userId);
+            return Ok(list);
+        }
+        catch (UnauthorizedAccessException)
         {
             return Unauthorized();
         }
-
-        if (size <= 0 || page <= 0)
-        {
-            return BadRequest(new ResponseModel
-            {
-                Status = "Error",
-                Message = "Page and size values must be greater than 0"
-            });
-        }
-
-        var list = await _patientService.GetPatientsList(
-            (string.IsNullOrEmpty(name)) ? "" : name,
-            conclusions,
-            sorting,
-            scheduledVisits == true,
-            onlyMine == true,
-            page,
-            size,
-            userId);
-        return Ok(list);
     }
     
     /// <summary>
@@ -147,17 +159,16 @@ public class PatientController : ControllerBase
         [FromRoute(Name = "id")] Guid id,
         [FromBody] InspectionCreateModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
+
             var inspectionId = await _patientService.CreateInspection(model, userId, id);
             return Ok(inspectionId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -205,24 +216,19 @@ public class PatientController : ControllerBase
         [FromQuery(Name = "page"), DefaultValue(1)] int page,
         [FromQuery(Name = "size"), DefaultValue(5)] int size)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
-        if (size <= 0 || page <= 0)
-        {
-            return BadRequest(new ResponseModel
-            {
-                Status = "Error",
-                Message = "Page and size values must be greater than 0"
-            });
-        }
-
         try
         {
+            await EnsureTokenIsValid();
+
+            if (size <= 0 || page <= 0)
+            {
+                return BadRequest(new ResponseModel
+                {
+                    Status = "Error",
+                    Message = "Page and size values must be greater than 0"
+                });
+            }
+
             var list = await _patientService.GetInspectionsList(
                 id,
                 grouped == true,
@@ -230,6 +236,10 @@ public class PatientController : ControllerBase
                 page,
                 size);
             return Ok(list);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -258,16 +268,14 @@ public class PatientController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<PatientModel>> GetPatient([FromRoute(Name = "id")] Guid id)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            await EnsureTokenIsValid();
             return Ok(await _patientService.GetPatientById(id));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -299,18 +307,16 @@ public class PatientController : ControllerBase
         [FromRoute(Name = "id")] Guid id,
         [FromQuery(Name = "request")] string? request)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            await EnsureTokenIsValid();
             return Ok(await _patientService.GetInspectionsWithoutChildren(
                 id,
                 string.IsNullOrEmpty(request) ? "" : request));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {

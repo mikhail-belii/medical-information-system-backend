@@ -157,3 +157,4 @@ C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Asp
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Extensions.DependencyInjection.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Extensions.Hosting.dll
 C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\Quartz.Serialization.SystemTextJson.dll
+C:\Users\а\RiderProjects\HITS_2grade_2module\WebApi\bin\Debug\net8.0\jose-jwt.dll

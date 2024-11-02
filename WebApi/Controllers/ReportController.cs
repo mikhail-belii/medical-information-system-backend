@@ -20,6 +20,17 @@ public class ReportController : ControllerBase
         _tokenService = tokenService;
     }
     
+    private async Task<Guid> EnsureTokenIsValid()
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        if (! await _tokenService.IsTokenValid(token))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return await _tokenService.GetUserIdFromToken(token);
+    }
+    
     /// <summary>
     /// Get a report on patients' visits based on ICD-10 roots for a specified time interval
     /// </summary>
@@ -43,30 +54,29 @@ public class ReportController : ControllerBase
         [FromQuery(Name = "end")] [Required] DateTime end,
         [FromQuery(Name = "icdRoots")] List<Guid>? icdRoots)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
-        if (start >= end)
-        {
-            return BadRequest(new ResponseModel
-            {
-                Status = "Error",
-                Message = "Start should be less than end"
-            });
-        }
-
         try
         {
+            await EnsureTokenIsValid();
+
+            if (start >= end)
+            {
+                return BadRequest(new ResponseModel
+                {
+                    Status = "Error",
+                    Message = "Start should be less than end"
+                });
+            }
+
             var model = await _reportService.GetReport(
                 start,
                 end,
                 icdRoots == null ? new List<Guid>() : icdRoots);
 
             return Ok(model);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {

@@ -20,6 +20,17 @@ public class InspectionController : ControllerBase
         _inspectionService = inspectionService;
     }
     
+    private async Task<Guid> EnsureTokenIsValid()
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        if (! await _tokenService.IsTokenValid(token))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return await _tokenService.GetUserIdFromToken(token);
+    }
+    
     /// <summary>
     /// Get full information about specified inspection
     /// </summary>
@@ -36,17 +47,16 @@ public class InspectionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<InspectionModel>> GetInspection([FromRoute(Name = "id")] Guid id)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            await EnsureTokenIsValid();
+
             var inspection = await _inspectionService.GetInspection(id);
             return Ok(inspection);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -79,17 +89,16 @@ public class InspectionController : ControllerBase
     public async Task<IActionResult> EditInspection([FromRoute(Name = "id")] Guid id, 
         [FromBody] InspectionEditModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
+
             await _inspectionService.EditInspection(id, model, userId);
             return Ok();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -137,17 +146,16 @@ public class InspectionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<List<InspectionPreviewModel>>> GetInspectionChain([FromRoute(Name = "id")] Guid id)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            await EnsureTokenIsValid();
+
             var list = await _inspectionService.GetInspectionChain(id);
             return Ok(list);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {

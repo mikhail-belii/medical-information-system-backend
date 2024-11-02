@@ -22,6 +22,16 @@ public class DoctorController : ControllerBase
         _tokenService = tokenService;
     }
 
+    private async Task<Guid> EnsureTokenIsValid()
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        if (! await _tokenService.IsTokenValid(token))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return await _tokenService.GetUserIdFromToken(token);
+    }
     
     /// <summary>
     /// Register new user
@@ -96,8 +106,7 @@ public class DoctorController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var (token, id) = await _doctorService.Register(model);
-        await _tokenService.AddToken(id, token.Token);
+        var token = await _doctorService.Register(model);
         return Ok(token);
     }
     
@@ -114,7 +123,7 @@ public class DoctorController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponseModel>> Login([FromBody] LoginCredentialsModel model)
     {
-        var (token, id) = await _doctorService.Login(model);
+        var token = await _doctorService.Login(model);
         if (token.Token.Equals(""))
         {
             return BadRequest(new ResponseModel
@@ -123,8 +132,6 @@ public class DoctorController : ControllerBase
                 Message = "Login failed"
             });
         }
-
-        await _tokenService.AddToken(id, token.Token);
         return Ok(token);
     }
 
@@ -142,13 +149,21 @@ public class DoctorController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        await _tokenService.RemoveToken(token);
-        return Ok(new ResponseModel
+        try
         {
-            Status = null,
-            Message = "Logged out"
-        });
+            var userId = await EnsureTokenIsValid();
+            var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+            await _tokenService.AddInvalidToken(token);
+            return Ok(new ResponseModel
+            {
+                Status = null,
+                Message = "Logged out"
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
     }
 
     
@@ -167,17 +182,16 @@ public class DoctorController : ControllerBase
     [HttpGet("profile")]
     public async Task<ActionResult<DoctorModel>> GetProfile()
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
             var doctorModel = await _doctorService.GetProfile(userId);
+
             return Ok(doctorModel);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (Exception)
         {
@@ -202,66 +216,65 @@ public class DoctorController : ControllerBase
     [HttpPut("profile")]
     public async Task<IActionResult> ChangeProfile([FromBody] DoctorEditModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-        
-        var isValid = ModelState.IsValid;
-        
-        if (!string.IsNullOrEmpty(model.Phone))
-        {
-            if (!Regex.IsMatch(model.Phone, RegexPatterns.Phone))
-            {
-                ModelState.AddModelError("Phone", 
-                    "Invalid phone number format. It should start with +7 and then contain exactly 10 digits");
-                isValid = false;
-            }
-        }
-        
-        if (!Regex.IsMatch(model.Email, RegexPatterns.Email))
-        {
-            ModelState.AddModelError("Email", 
-                "Invalid email format");
-            isValid = false;
-        }
-
-        if (!await _doctorService.IsEmailUnique(model.Email))
-        {
-            var doctor = await _doctorService.GetDoctorById(userId);
-            if (doctor?.Email != model.Email)
-            {
-                ModelState.AddModelError("Email",
-                    $"Email '{model.Email}' is already taken");
-                isValid = false;
-            }
-        }
-        
-        if (model.BirthDay > DateTime.UtcNow)
-        {
-            ModelState.AddModelError("Birthday",
-                "Birth date can't be later than today");
-            isValid = false;
-        }
-        
-        if (model.Gender is not (Gender.Female or Gender.Male))
-        {
-            ModelState.AddModelError("Gender",
-                "Gender must be Male or Female");
-            isValid = false;
-        }
-        
-        if (!isValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
+
+            var isValid = ModelState.IsValid;
+
+            if (!string.IsNullOrEmpty(model.Phone))
+            {
+                if (!Regex.IsMatch(model.Phone, RegexPatterns.Phone))
+                {
+                    ModelState.AddModelError("Phone",
+                        "Invalid phone number format. It should start with +7 and then contain exactly 10 digits");
+                    isValid = false;
+                }
+            }
+
+            if (!Regex.IsMatch(model.Email, RegexPatterns.Email))
+            {
+                ModelState.AddModelError("Email",
+                    "Invalid email format");
+                isValid = false;
+            }
+
+            if (!await _doctorService.IsEmailUnique(model.Email))
+            {
+                var doctor = await _doctorService.GetDoctorById(userId);
+                if (doctor?.Email != model.Email)
+                {
+                    ModelState.AddModelError("Email",
+                        $"Email '{model.Email}' is already taken");
+                    isValid = false;
+                }
+            }
+
+            if (model.BirthDay > DateTime.UtcNow)
+            {
+                ModelState.AddModelError("Birthday",
+                    "Birth date can't be later than today");
+                isValid = false;
+            }
+
+            if (model.Gender is not (Gender.Female or Gender.Male))
+            {
+                ModelState.AddModelError("Gender",
+                    "Gender must be Male or Female");
+                isValid = false;
+            }
+
+            if (!isValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             await _doctorService.EditProfile(userId, model);
             return Ok();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (Exception)
         {

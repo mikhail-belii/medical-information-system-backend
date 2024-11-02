@@ -23,6 +23,17 @@ public class ConsultationController : ControllerBase
         _tokenService = tokenService;
     }
     
+    private async Task<Guid> EnsureTokenIsValid()
+    {
+        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        if (! await _tokenService.IsTokenValid(token))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        return await _tokenService.GetUserIdFromToken(token);
+    }
+    
     /// <summary>
     /// Get a list of medical inspections for consultation
     /// </summary>
@@ -48,28 +59,30 @@ public class ConsultationController : ControllerBase
         [FromQuery(Name = "page"), DefaultValue(1)] int page,
         [FromQuery(Name = "size"), DefaultValue(5)] int size)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
+        try
+        {
+            await EnsureTokenIsValid();
+
+            if (size <= 0 || page <= 0)
+            {
+                return BadRequest(new ResponseModel
+                {
+                    Status = "Error",
+                    Message = "Page and size values must be greater than 0"
+                });
+            }
+
+            var list = await _consultationService.GetInspectionsList(
+                grouped == true,
+                icdRoots.Count == 0 ? new List<Guid>() : icdRoots,
+                page,
+                size);
+            return Ok(list);
+        }
+        catch (UnauthorizedAccessException)
         {
             return Unauthorized();
         }
-
-        if (size <= 0 || page <= 0)
-        {
-            return BadRequest(new ResponseModel
-            {
-                Status = "Error",
-                Message = "Page and size values must be greater than 0"
-            });
-        }
-        
-        var list = await _consultationService.GetInspectionsList(
-            grouped == true,
-            icdRoots.Count == 0 ? new List<Guid>() : icdRoots,
-            page,
-            size);
-        return Ok(list);
     }
     
     /// <summary>
@@ -88,17 +101,16 @@ public class ConsultationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
     public async Task<ActionResult<ConsultationModel>> GetConsultation([FromRoute(Name = "id")] Guid id)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            await EnsureTokenIsValid();
+
             var consultation = await _consultationService.GetConsultation(id);
             return Ok(consultation);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
@@ -132,17 +144,16 @@ public class ConsultationController : ControllerBase
         [FromRoute(Name = "id")] Guid id,
         [FromBody] CommentCreateModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
+
             var commentId = await _consultationService.AddComment(id, model, userId);
             return Ok(commentId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException ex)
         {
@@ -195,17 +206,16 @@ public class ConsultationController : ControllerBase
             [FromRoute(Name = "id")] Guid id,
             [FromBody] InspectionCommentCreateModel model)
     {
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        var userId = await _tokenService.GetUserIdByToken(token);
-        if (userId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
-
         try
         {
+            var userId = await EnsureTokenIsValid();
+
             await _consultationService.EditComment(id, model, userId);
             return Ok();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         catch (KeyNotFoundException)
         {
