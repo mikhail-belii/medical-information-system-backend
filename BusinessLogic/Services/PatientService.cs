@@ -482,7 +482,7 @@ public class PatientService : IPatientService
             .Include(i => i.Diagnoses)
             .AsQueryable();
 
-        if (await _dbContext.Patients.FindAsync(id, cancellationToken) == null)
+        if (await _dbContext.Patients.FindAsync(id) == null)
         {
             throw new KeyNotFoundException();
         }

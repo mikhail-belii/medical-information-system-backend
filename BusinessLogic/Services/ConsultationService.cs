@@ -118,7 +118,7 @@ public class ConsultationService : IConsultationService
         query = query.Where(i => _dbContext.Consultations
             .Any(c => c.InspectionId == i.Id));
 
-        var inspections = await query.ToListAsync();
+        var inspections = await query.ToListAsync(cancellationToken);
         
         var previewModels = new List<InspectionPreviewModel>();
         foreach (var inspection in inspections)
@@ -138,7 +138,7 @@ public class ConsultationService : IConsultationService
             var diagnosisEntity = inspection.Diagnoses
                 .FirstOrDefault(d => d.Type == DiagnosisType.Main);
             var icd10 = await _dbContext.Icd10s
-                .FirstOrDefaultAsync(i => i.Id == diagnosisEntity.Icd10Id);
+                .FirstOrDefaultAsync(i => i.Id == diagnosisEntity.Icd10Id, cancellationToken);
             var diagnosisModel = new DiagnosisModel
             {
                 Code = icd10.Code,
@@ -150,7 +150,7 @@ public class ConsultationService : IConsultationService
             };
             model.Diagnosis = diagnosisModel;
             var hasNested = await _dbContext.Inspections
-                .AnyAsync(i => i.PreviousInspectionId == model.Id);
+                .AnyAsync(i => i.PreviousInspectionId == model.Id, cancellationToken);
             var hasChain = model.PreviousId == null && hasNested;
             model.HasNested = hasNested;
             model.HasChain = hasChain;
@@ -237,6 +237,7 @@ public class ConsultationService : IConsultationService
         }
 
         comment.Content = model.Content;
+        comment.ModifiedDate = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
     }
 }
