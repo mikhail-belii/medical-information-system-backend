@@ -74,11 +74,14 @@ public class PatientService : IPatientService
             }
         }
 
-        foreach (var consultation in inspectionCreateModel.Consultations)
+        if (inspectionCreateModel.Consultations != null)
         {
-            if (await _dbContext.Specialities.FindAsync(consultation.SpecialityId) == null)
+            foreach (var consultation in inspectionCreateModel.Consultations)
             {
-                throw new KeyNotFoundException($"Speciality with id {consultation.SpecialityId} does not exist");
+                if (await _dbContext.Specialities.FindAsync(consultation.SpecialityId) == null)
+                {
+                    throw new KeyNotFoundException($"Speciality with id {consultation.SpecialityId} does not exist");
+                }
             }
         }
         

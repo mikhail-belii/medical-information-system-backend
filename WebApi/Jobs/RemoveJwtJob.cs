@@ -3,7 +3,6 @@ using Quartz;
 
 namespace WebApi.Jobs;
 
-[DisallowConcurrentExecution]
 public class RemoveJwtJob : IJob
 {
     private readonly ITokenService _tokenService;

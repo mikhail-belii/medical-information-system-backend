@@ -4,7 +4,6 @@ using Quartz;
 
 namespace WebApi.Jobs;
 
-[DisallowConcurrentExecution]
 public class SendEmailJob : IJob
 {
     private readonly IEmailService _emailService;

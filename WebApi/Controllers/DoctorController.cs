@@ -42,6 +42,7 @@ public class DoctorController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenResponseModel))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<ActionResult<TokenResponseModel>> Register([FromBody] DoctorRegisterModel model)
     {
@@ -120,6 +121,7 @@ public class DoctorController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenResponseModel))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponseModel>> Login([FromBody] LoginCredentialsModel model)
     {

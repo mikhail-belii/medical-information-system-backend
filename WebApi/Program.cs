@@ -62,10 +62,11 @@ builder.Services.AddSwaggerGen(c =>
     };
     
     c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-    {
-        { securityScheme, new List<string>() }
-    });
+    // c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    // {
+    //     { securityScheme, new List<string>() }
+    // });
+    c.OperationFilter<SwaggerAuthorizeCheckOperationFilter>();
     
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));

@@ -215,6 +215,7 @@ public class ConsultationService : IConsultationService
             Id = Guid.NewGuid(),
             ParentId = commentCreateModel.ParentId,
         };
+        consultation.Comments.Add(comment);
         await _dbContext.Comments.AddAsync(comment);
         await _dbContext.SaveChangesAsync();
 

@@ -3,6 +3,7 @@ using BusinessLogic.ServiceInterfaces;
 using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
 using Common.DtoModels.Speciality;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
@@ -27,6 +28,7 @@ public class DictionaryController : ControllerBase
     /// <response code="200">Specialties paged list retrieved</response>
     /// <response code="400">Invalid arguments for filtration/pagination</response>
     /// <response code="500">InternalServerError</response>
+    [AllowAnonymous]
     [HttpGet("speciality")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SpecialtiesPagedListModel))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null!)]
@@ -62,6 +64,7 @@ public class DictionaryController : ControllerBase
     /// <response code="200">Searching result extracted</response>
     /// <response code="400">Some fields in request are invalid</response>
     /// <response code="500">InternalServerError</response>
+    [AllowAnonymous]
     [HttpGet("icd10")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Icd10SearchModel))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -93,6 +96,7 @@ public class DictionaryController : ControllerBase
     /// </summary>
     /// <response code="200">Root ICD-10 elements retrieved</response>
     /// <response code="500">InternalServerError</response>
+    [AllowAnonymous]
     [HttpGet("icd10/roots")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Icd10RecordModel>))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ResponseModel))]
