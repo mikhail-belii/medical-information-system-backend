@@ -151,7 +151,7 @@ public class InspectionService : IInspectionService
     public async Task EditInspection(Guid id, InspectionEditModel model, Guid doctorId)
     {
         var inspection = await _dbContext.Inspections
-            .Include(i => i.Patient)
+            .Include(i => i.Patient).ThenInclude(patientEntity => patientEntity.Inspections)
             .Include(i => i.Doctor)
             .Include(i => i.Diagnoses)
             .Include(i => i.Consultations)!
@@ -186,7 +186,7 @@ public class InspectionService : IInspectionService
 
         if (model.Diagnoses
                 .Where(d => d.Type == DiagnosisType.Main)
-                .ToList().Count > 1)
+                .ToList().Count != 1)
         {
             throw new IncorrectModelException("There are more than one diagnosis with type 'Main'");
         }
@@ -199,6 +199,25 @@ public class InspectionService : IInspectionService
         if (model.Conclusion == Conclusion.Death && model.DeathDate == null)
         {
             throw new IncorrectModelException("There is no expected Death Date");
+        }
+
+        foreach (var diagnosis in model.Diagnoses)
+        {
+            if (await _dbContext.Icd10s
+                    .Where(i => i.Id == diagnosis.IcdDiagnosisId)
+                    .FirstOrDefaultAsync() == null)
+            {
+                throw new IncorrectModelException($"Diagnosis with id {diagnosis.IcdDiagnosisId} does not exist");
+            }
+        }
+
+        var patient = inspection.Patient;
+        var inspections = patient.Inspections
+            .OrderByDescending(i => i.Date)
+            .ToList();
+        if (inspections[0].Id != id && model.Conclusion == Conclusion.Death)
+        {
+            throw new IncorrectModelException("You cannot edit this inspection's conclusion with type 'Death'");
         }
 
         await _dbContext.Inspections.Where(i => i.Id == id)

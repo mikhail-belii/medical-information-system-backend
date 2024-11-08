@@ -1,4 +1,5 @@
 ﻿using BusinessLogic.ServiceInterfaces;
+using Common;
 using Common.DtoModels.Icd10;
 using Common.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -35,15 +36,18 @@ public class ReportService : IReportService
             {
                 var root = await _dbContext.Icd10s
                     .Where(i => i.Id == id)
-                    .Select(i => i.Code)
                     .FirstOrDefaultAsync(cancellationToken);
-                roots.Add(root);
-            }
-        }
+                if (root != null && root.IcdParentId != null)
+                {
+                    throw new IncorrectModelException($"ICD-10 with id {id} is not the root");
+                }
 
-        if (roots.Any(e => e == null))
-        {
-            throw new KeyNotFoundException();
+                if (root == null)
+                {
+                    throw new KeyNotFoundException($"There is no ICD-10 with id {id}");
+                }
+                roots.Add(root.Code);
+            }
         }
 
         var model = new IcdRootsReportModel
@@ -103,7 +107,11 @@ public class ReportService : IReportService
             }
         }
 
-        model.Records = patientRecords.Values.ToList();
+        var sortedPatients = patientRecords.Values
+            .OrderBy(p => p.PatientName)
+            .ToList();
+        
+        model.Records = sortedPatients;
 
         return model;
     }

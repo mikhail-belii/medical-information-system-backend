@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using BusinessLogic.ServiceInterfaces;
+using Common;
 using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
 using Microsoft.AspNetCore.Authorization;
@@ -78,12 +79,20 @@ public class ReportController : ControllerBase
         {
             return Unauthorized();
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
             return BadRequest(new ResponseModel
             {
                 Status = "Error",
-                Message = "Incorrect id for ICD root"
+                Message = ex.Message
+            });
+        }
+        catch (IncorrectModelException ex)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = ex.Message
             });
         }
     }

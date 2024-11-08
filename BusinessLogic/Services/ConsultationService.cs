@@ -212,6 +212,17 @@ public class ConsultationService : IConsultationService
         {
             throw new ForbiddenException("No permission for adding comment");
         }
+        
+        var parentIdConsultationId = await _dbContext.Comments
+            .Where(c => c.Id == commentCreateModel.ParentId)
+            .Select(c => c.ConsultationId)
+            .FirstOrDefaultAsync();
+
+        if (consultation.Id != parentIdConsultationId)
+        {
+            throw new IncorrectModelException($"Comment with id {commentCreateModel.ParentId} " +
+                                              $"refers to another consultation");
+        }
 
         var comment = new CommentEntity
         {

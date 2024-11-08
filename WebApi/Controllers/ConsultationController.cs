@@ -180,6 +180,14 @@ public class ConsultationController : ControllerBase
                 Message = $"Comment with id '{model.ParentId}' not found"
             });
         }
+        catch (IncorrectModelException ex)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = ex.Message
+            });
+        }
         catch (ForbiddenException ex)
         {
             return Problem(

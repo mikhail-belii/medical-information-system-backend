@@ -70,7 +70,7 @@ public class PatientService : IPatientService
         {
             if (await _dbContext.Icd10s.FindAsync(diagnosis.IcdDiagnosisId) == null)
             {
-                throw new KeyNotFoundException($"Diagnosis with id {diagnosis.IcdDiagnosisId} does not exist");
+                throw new IncorrectModelException($"Diagnosis with id {diagnosis.IcdDiagnosisId} does not exist");
             }
         }
 
@@ -80,7 +80,7 @@ public class PatientService : IPatientService
             {
                 if (await _dbContext.Specialities.FindAsync(consultation.SpecialityId) == null)
                 {
-                    throw new KeyNotFoundException($"Speciality with id {consultation.SpecialityId} does not exist");
+                    throw new IncorrectModelException($"Speciality with id {consultation.SpecialityId} does not exist");
                 }
             }
         }
@@ -143,9 +143,9 @@ public class PatientService : IPatientService
 
         if (inspectionCreateModel.Diagnoses
                 .Where(d => d.Type == DiagnosisType.Main)
-                .ToList().Count > 1)
+                .ToList().Count != 1)
         {
-            throw new IncorrectModelException("There are more than one diagnosis with type 'Main'");
+            throw new IncorrectModelException("There are more or less than one diagnosis with type 'Main'");
         }
 
         if (inspectionCreateModel.Conclusion == Conclusion.Disease && inspectionCreateModel.NextVisitDate == null)
