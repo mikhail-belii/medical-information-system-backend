@@ -83,6 +83,14 @@ public class ConsultationController : ControllerBase
         {
             return Unauthorized();
         }
+        catch (IncorrectModelException ex)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = ex.Message
+            });
+        }
     }
     
     /// <summary>

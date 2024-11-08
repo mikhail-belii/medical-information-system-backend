@@ -88,20 +88,27 @@ public class ConsultationService : IConsultationService
             var childrens = new List<Guid>();
             foreach (var rootId in icdRoots)
             {
-                var rootCode = await _dbContext.Icd10s
+                var root = await _dbContext.Icd10s
                     .Where(i => i.Id == rootId)
-                    .Select(i => i.Code)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                if (rootCode != null)
+                if (root == null)
                 {
-                    var icdChildrens = await _dbContext.Icd10s
-                        .Where(i => i.IcdRootCode == rootCode)
-                        .Select(i => i.Id)
-                        .ToListAsync(cancellationToken);
-
-                    childrens.AddRange(icdChildrens);
+                    throw new IncorrectModelException($"Incorrect ICD-10 root with id {rootId}");
                 }
+
+                if (root.IcdParentId != null)
+                {
+                    throw new IncorrectModelException($"ICD-10 with id {rootId} is not ICD-10 root");
+                }
+
+                var rootCode = root.Code;
+                var icdChildrens = await _dbContext.Icd10s
+                    .Where(i => i.IcdRootCode == rootCode)
+                    .Select(i => i.Id)
+                    .ToListAsync();
+
+                childrens.AddRange(icdChildrens);
             }
 
             query = query

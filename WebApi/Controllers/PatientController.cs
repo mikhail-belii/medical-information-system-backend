@@ -249,7 +249,14 @@ public class PatientController : ControllerBase
                 Status = $"Patient with id '{id}' not found"
             });
         }
-
+        catch (IncorrectModelException ex)
+        {
+            return BadRequest(new ResponseModel
+            {
+                Status = "Error",
+                Message = ex.Message
+            });
+        }
     }
     
     /// <summary>
