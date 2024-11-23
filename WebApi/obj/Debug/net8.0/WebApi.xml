@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebApi</name>
+    </assembly>
+    <members>
+        <member name="M:WebApi.Controllers.ConsultationController.GetInspectionsList(System.Nullable{System.Boolean},System.Collections.Generic.List{System.Guid},System.Int32,System.Int32)">
+            <summary>
+            Get a list of medical inspections for consultation
+            </summary>
+            <param name="grouped">flag - whether grouping by inspection chain is required - for filtration</param>
+            <param name="icdRoots">root elements for ICD-10 - for filtration</param>
+            <param name="page">page number</param>
+            <param name="size">required number of elements per page</param>
+            <response code="200">Inspections for consultation list retrieved</response>
+            <response code="400">Invalid arguments for filtration/pagination</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.ConsultationController.GetConsultation(System.Guid)">
+            <summary>
+            Get concrete consultation
+            </summary>
+            <param name="id">Consultation's identifier</param>
+            <response code="200">Success</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.ConsultationController.AddComment(System.Guid,Common.DtoModels.Comment.CommentCreateModel)">
+            <summary>
+            Add comment to concrete consultation
+            </summary>
+            <param name="id">Consultation's identifier</param>
+            <response code="200">Success</response>
+            <response code="400">Invalid arguments</response>
+            <response code="401">Unauthorized</response>
+            <response code="403">User cannot add comment to consultation (unsuitable specialty and not the inspection author)</response>
+            <response code="404">Consultation or parent comment not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.ConsultationController.EditComment(System.Guid,Common.DtoModels.Inspection.InspectionCommentCreateModel)">
+            <summary>
+            Edit comment
+            </summary>
+            <param name="id">Comment's identifier</param>
+            <response code="200">Success</response>
+            <response code="400">Invalid arguments</response>
+            <response code="401">Unauthorized</response>
+            <response code="403">User is not the author of the comment</response>
+            <response code="404">Comment not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DictionaryController.GetSpecialities(System.String,System.Int32,System.Int32)">
+            <summary>
+            Get specialities list
+            </summary>
+            <param name="name">part of the name for filtering</param>
+            <param name="page">page number</param>
+            <param name="size">required number of elements per page</param>
+            <response code="200">Specialties paged list retrieved</response>
+            <response code="400">Invalid arguments for filtration/pagination</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DictionaryController.SearchForDiagnoses(System.String,System.Int32,System.Int32)">
+            <summary>
+            Search for diagnoses in ICD-10 dictionary
+            </summary>
+            <param name="request">part of the diagnosis name or code</param>
+            <param name="page">page number</param>
+            <param name="size">required number of elements per page</param>
+            <response code="200">Searching result extracted</response>
+            <response code="400">Some fields in request are invalid</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DictionaryController.GetRoots">
+            <summary>
+            Get root ICD-10 elements
+            </summary>
+            <response code="200">Root ICD-10 elements retrieved</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DoctorController.Register(Common.DtoModels.Doctor.DoctorRegisterModel)">
+            <summary>
+            Register new user
+            </summary>
+            <response code="200">Doctor was registered</response>
+            <response code="400">Invalid arguments</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DoctorController.Login(Common.DtoModels.Others.LoginCredentialsModel)">
+            <summary>
+            Log in to the system
+            </summary>
+            <response code="200">Doctor was registered</response>
+            <response code="400">Invalid arguments</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DoctorController.Logout">
+            <summary>
+            Log out system user
+            </summary>
+            <response code="200">Success</response>
+            <response code="401">Unauthorized</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DoctorController.GetProfile">
+            <summary>
+            Get user profile
+            </summary>
+            <response code="200">Success</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DoctorController.ChangeProfile(Common.DtoModels.Doctor.DoctorEditModel)">
+            <summary>
+            Edit user profile
+            </summary>
+            <response code="200">Success</response>
+            <response code="400">Bad request</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.InspectionController.GetInspection(System.Guid)">
+            <summary>
+            Get full information about specified inspection
+            </summary>
+            <param name="id">Inspection's identifier</param>
+            <response code="200">Inspection found and successfully extracted</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.InspectionController.EditInspection(System.Guid,Common.DtoModels.Inspection.InspectionEditModel)">
+            <summary>
+            Edit concrete inspection
+            </summary>
+            <param name="id">Inspection's identifier</param>
+            <response code="200">Success</response>
+            <response code="400">Invalid arguments</response>
+            <response code="401">Unauthorized</response>
+            <response code="403">User doesn't have editing rights (not the inspection author)</response>
+            <response code="404">Inspection not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.InspectionController.GetInspectionChain(System.Guid)">
+            <summary>
+            Get medical inspection chain for root inspection
+            </summary>
+            <param name="id">Root inspection's identifier</param>
+            <response code="200">Success</response>
+            <response code="400">Bad request</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.CreatePatient(Common.DtoModels.Patient.PatientCreateModel)">
+            <summary>
+            Create new patient
+            </summary>
+            <response code="200">Patient was registered</response>
+            <response code="400">Invalid arguments</response>
+            <response code="401">Unauthorized</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.GetPatientsList(System.String,System.Collections.Generic.List{Common.Enums.Conclusion},System.Nullable{Common.Enums.PatientSorting},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Int32,System.Int32)">
+            <summary>
+            Get patients list
+            </summary>
+            <param name="name">part of the name for filtering</param>
+            <param name="conclusions">conclusion list to filter by conclusions</param>
+            <param name="sorting">option to sort patients</param>
+            <param name="scheduledVisits">show only scheduled visits</param>
+            <param name="onlyMine">show inspections done by this doctor</param>
+            <param name="page">page number</param>
+            <param name="size">required number of elements per page</param>
+            <response code="200">Patients paged list retrieved</response>
+            <response code="400">Invalid arguments for filtration/pagination/sorting</response>
+            <response code="401">Unauthorized</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.CreateInspection(System.Guid,Common.DtoModels.Inspection.InspectionCreateModel)">
+            <summary>
+            Create inspection for specified patient
+            </summary>
+            <param name="id">Patient's identifier</param>
+            <response code="200">Success</response>
+            <response code="400">Bad request</response>
+            <response code="401">Unauthorized</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.GetInspectionsList(System.Guid,System.Nullable{System.Boolean},System.Collections.Generic.List{System.Guid},System.Int32,System.Int32)">
+            <summary>
+            Get a list of patient medical inspections
+            </summary>
+            <param name="id">Patient's identifier</param>
+            <param name="grouped">flag - whether grouping by inspection chain is required - for filtration</param>
+            <param name="icdRoots">root elements for ICD-10 - for filtration</param>
+            <param name="page">page number</param>
+            <param name="size">required number of elements per page</param>
+            <response code="200">Patient's inspections list retrieved</response>
+            <response code="400">Invalid arguments for filtration/pagination</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Patient not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.GetPatient(System.Guid)">
+            <summary>
+            Get patient card
+            </summary>
+            <param name="id">Patient's identifier</param>
+            <response code="200">Success</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Not Found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.PatientController.GetInspectionsWithoutChildren(System.Guid,System.String)">
+            <summary>
+            Search for patient medical inspections without child inspections
+            </summary>
+            <param name="id">Patient's identifier</param>
+            <param name="request">part of the diagnosis name or code</param>
+            <response code="200">Patient's inspections list retrieved</response>
+            <response code="401">Unauthorized</response>
+            <response code="404">Patient not found</response>
+            <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.ReportController.GetReport(System.DateTime,System.DateTime,System.Collections.Generic.List{System.Guid})">
+            <summary>
+            Get a report on patients' visits based on ICD-10 roots for a specified time interval
+            </summary>
+            <param name="start">Start of time interval</param>
+            <param name="end">End of time interval</param>
+            <param name="icdRoots">Set of ICD-10 roots. All possible roots if null</param>
+            <response code="200">Report extracted successfully</response>
+            <response code="400">Some fields in request are invalid</response>
+            <response code="401">Unauthorized</response>
+            <response code="403">Access to report is forbidden for user</response>
+            <response code="500">InternalServerError</response>
+        </member>
+    </members>
+</doc>
