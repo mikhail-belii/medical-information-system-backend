@@ -1,6 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using BusinessLogic.ServiceInterfaces;
 using Common;
+using Common.DbModels;
 using Common.DtoModels.Icd10;
 using Common.DtoModels.Others;
 using Common.DtoModels.Speciality;
@@ -127,5 +129,116 @@ public class DictionaryService : IDictionaryService
         };
 
         return model;
+    }
+    
+        public async Task<ResponseModel> ImportIcd(string jsonPath, CancellationToken cancellationToken = default)
+    {
+        var icds = await _dbContext.Icd10s.AnyAsync(cancellationToken);
+        if (icds)
+        {
+            return new ResponseModel
+            {
+                Status = "400",
+                Message = "ICD-10 is already imported"
+            };
+        }
+        
+        try
+        {
+            var jsonContent = await File.ReadAllTextAsync(jsonPath, cancellationToken);
+
+            var icd10Data = JsonSerializer.Deserialize<Icd10JsonModel>(jsonContent);
+
+            if (icd10Data?.records == null || !icd10Data.records.Any())
+            {
+                throw new Exception();
+            }
+
+            var icd10Dictionary = icd10Data.records.ToDictionary(r => r.ID.ToString(), r => r);
+            
+
+            var icd10Entities = icd10Data.records.Select(r => new Icd10Entity
+            {
+                Id = Guid.NewGuid(),
+                Code = r.MKB_CODE,
+                CreateTime = DateTime.UtcNow,
+                IcdId = r.ID.ToString(),
+                IcdParentId = r.ID_PARENT,
+                IcdRootCode = GetRootCode(r.ID.ToString(), icd10Dictionary),
+                Name = r.MKB_NAME
+            }).ToList();
+
+            await _dbContext.Icd10s.AddRangeAsync(icd10Entities, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            return new ResponseModel
+            {
+                Status = "400",
+                Message = "Some errors occured while importing json file"
+            };
+        }
+
+        return new ResponseModel
+        {
+            Status = "200",
+            Message = "ICD-10 was successfully imported"
+        };
+    }
+
+    public async Task<ResponseModel> CreateSpeciality(CreateSpecialityModel model)
+    {
+        var doesExist = await _dbContext.Specialities.AnyAsync(s => s.Name == model.Name);
+        if (doesExist)
+        {
+            return new ResponseModel
+            {
+                Status = "400",
+                Message = "This speciality already exists"
+            };
+        }
+
+        var specialityEntity = new SpecialityEntity
+        {
+            CreateTime = DateTime.UtcNow,
+            Id = Guid.NewGuid(),
+            Name = model.Name
+        };
+        await _dbContext.Specialities.AddAsync(specialityEntity);
+        await _dbContext.SaveChangesAsync();
+        
+        return new ResponseModel
+        {
+            Status = "200",
+            Message = "Speciality was successfully added"
+        };
+    }
+
+    private string GetRootCode(string currentId, Dictionary<string, Icd10JsonRecord> icd10Dictionary)
+    {
+        if (!icd10Dictionary.TryGetValue(currentId, out var currentRecord))
+        {
+            return null;
+        }
+        
+        return string.IsNullOrEmpty(currentRecord.ID_PARENT) ? currentRecord.MKB_CODE :
+            GetRootCode(currentRecord.ID_PARENT, icd10Dictionary);
+    }
+    
+    private class Icd10JsonModel
+    {
+        public List<Icd10JsonRecord> records { get; set; }
+    }
+
+    private class Icd10JsonRecord
+    {
+        public int ID { get; set; }
+        public string REC_CODE { get; set; }
+        public string MKB_CODE { get; set; }
+        public string MKB_NAME { get; set; }
+        public string ID_PARENT { get; set; }
+        public int ACTUAL { get; set; }
     }
 }

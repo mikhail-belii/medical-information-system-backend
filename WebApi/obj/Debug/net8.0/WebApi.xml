@@ -52,6 +52,13 @@
             <response code="404">Comment not found</response>
             <response code="500">InternalServerError</response>
         </member>
+        <member name="M:WebApi.Controllers.DictionaryController.CreateSpeciality(Common.DtoModels.Speciality.CreateSpecialityModel)">
+            <summary>
+            Add new speciality
+            </summary>
+            <response code="200">Speciality was added</response>
+            <response code="400">Bad request</response>
+        </member>
         <member name="M:WebApi.Controllers.DictionaryController.GetSpecialities(System.String,System.Int32,System.Int32)">
             <summary>
             Get specialities list
@@ -80,6 +87,13 @@
             </summary>
             <response code="200">Root ICD-10 elements retrieved</response>
             <response code="500">InternalServerError</response>
+        </member>
+        <member name="M:WebApi.Controllers.DictionaryController.ImportIcd">
+            <summary>
+            Import ICD
+            </summary>
+            <response code="200">ICD was successfully imported</response>
+            <response code="400">Bad request</response>
         </member>
         <member name="M:WebApi.Controllers.DoctorController.Register(Common.DtoModels.Doctor.DoctorRegisterModel)">
             <summary>

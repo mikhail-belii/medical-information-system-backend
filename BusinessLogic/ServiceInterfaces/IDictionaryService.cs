@@ -1,4 +1,5 @@
 ﻿using Common.DtoModels.Icd10;
+using Common.DtoModels.Others;
 using Common.DtoModels.Speciality;
 
 namespace BusinessLogic.ServiceInterfaces;
@@ -12,4 +13,6 @@ public interface IDictionaryService
         int page, 
         int size,
         CancellationToken cancellationToken = default);
+    public Task<ResponseModel> ImportIcd(string jsonPath, CancellationToken cancellationToken = default);
+    public Task<ResponseModel> CreateSpeciality(CreateSpecialityModel model);
 }

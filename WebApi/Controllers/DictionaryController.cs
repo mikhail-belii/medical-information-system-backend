@@ -18,6 +18,26 @@ public class DictionaryController : ControllerBase
     {
         _dictionaryService = dictionaryService;
     }
+
+    /// <summary>
+    /// Add new speciality
+    /// </summary>
+    /// <response code="200">Speciality was added</response>
+    /// <response code="400">Bad request</response>
+    [AllowAnonymous]
+    [HttpPost("speciality")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseModel))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResponseModel))]
+    public async Task<ActionResult<ResponseModel>> CreateSpeciality([FromBody] CreateSpecialityModel model)
+    {
+        var result = await _dictionaryService.CreateSpeciality(model);
+        if (result.Status == "200")
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
+    }
     
     /// <summary>
     /// Get specialities list
@@ -104,5 +124,25 @@ public class DictionaryController : ControllerBase
     {
         var roots = await _dictionaryService.GetRoots();
         return Ok(roots);
+    }
+    
+    /// <summary>
+    /// Import ICD
+    /// </summary>
+    /// <response code="200">ICD was successfully imported</response>
+    /// <response code="400">Bad request</response>
+    [AllowAnonymous]
+    [HttpPost("icd10/import")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseModel))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResponseModel))]
+    public async Task<ActionResult<ResponseModel>> ImportIcd()
+    {
+        var result = await _dictionaryService.ImportIcd("../BusinessLogic/ImportData/ICD10.json");
+        if (result.Status == "200")
+        {
+            return Ok(result);
+        }
+
+        return BadRequest(result);
     }
 }
